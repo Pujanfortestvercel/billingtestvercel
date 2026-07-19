@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BillingApp launcher icon foreground: a white receipt/bill on the brand blue
+     background. Vector so it renders crisply at every density with no PNGs. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Receipt body with a torn (zigzag) bottom edge. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,22 L72,22 L72,78 L67,83 L62,78 L57,83 L52,78 L47,83 L42,78 L37,83 L32,78 Z" />
+    <!-- Invoice text lines. -->
+    <path
+        android:strokeColor="#2563EB"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M39,35 L65,35" />
+    <path
+        android:strokeColor="#2563EB"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M39,45 L65,45" />
+    <path
+        android:strokeColor="#2563EB"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M39,55 L57,55" />
+</vector>
