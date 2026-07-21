@@ -18,14 +18,14 @@
     "@supabase/supabase-js": "^2.108.1",
     "react": "19.2.3",
     "react-native": "0.86.0",
+    "react-native-config": "^1.5.3",
     "react-native-get-random-values": "^2.0.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-print": "^0.11.0",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.25.2",
     "react-native-share": "^12.3.1",
-    "react-native-url-polyfill": "^3.0.0",
-    "react-native-config": "^1.5.3"
+    "react-native-url-polyfill": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -36,6 +36,7 @@
     "@react-native-community/cli-platform-ios": "20.1.0",
     "@react-native/babel-preset": "0.86.0",
     "@react-native/eslint-config": "0.86.0",
+    "@react-native/jest-preset": "^0.86.0",
     "@react-native/metro-config": "0.86.0",
     "@react-native/typescript-config": "0.86.0",
     "@types/jest": "^29.5.13",

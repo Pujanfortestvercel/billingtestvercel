@@ -40,9 +40,9 @@ create index if not exists idx_bill_items_item on public.bill_items(item_id);
 update public.bill_items bi
    set item_id = i.id
   from public.items i
-  join public.bills b on b.id = bi.bill_id
- where bi.item_id is null
-   and b.user_id = i.user_id
+  join public.bills b on b.user_id = i.user_id
+ where bi.bill_id = b.id
+   and bi.item_id is null
    and lower(i.item_name) = lower(bi.item_name);
 
 -- 4) THE LEDGER -------------------------------------------------------------

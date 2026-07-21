@@ -5,7 +5,7 @@ import { Button, Card } from '../components/UI';
 
 export function PendingApprovalPage() {
   const { user, signOut } = useAuth();
-  const { refresh } = useSubscription();
+  const { refresh, status } = useSubscription();
   const [checking, setChecking] = useState(false);
 
   async function checkAgain() {
