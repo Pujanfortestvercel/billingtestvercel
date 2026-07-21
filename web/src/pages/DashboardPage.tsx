@@ -21,7 +21,7 @@ import { formatCurrency, formatDateTime } from '../utils/format';
 export function DashboardPage() {
   const { user } = useAuth();
   const { status, daysLeft, loading: subLoading, inventoryEnabled } = useSubscription();
-  const { store, settings } = useSettings();
+  const { store } = useSettings();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);

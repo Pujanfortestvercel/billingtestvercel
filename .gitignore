@@ -84,3 +84,6 @@ web/.env.local
 web/dist/
 web/tsconfig.tsbuildinfo
 
+# Signing secrets
+web/android/keystore.properties
+

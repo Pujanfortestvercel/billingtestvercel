@@ -143,6 +143,10 @@ export function HistoryPage() {
   }
 
   async function remove(bill: Bill) {
+    if (isMedical) {
+      toast('Regulations require pharmacies to preserve all bill history.', 'error');
+      return;
+    }
     if (!(await confirm('Delete bill', `Delete bill ${bill.bill_number}?`, { danger: true }))) return;
     try {
       await deleteBill(bill.id);
@@ -154,7 +158,7 @@ export function HistoryPage() {
   }
 
   async function removeAll() {
-    if (settings?.store_type === 'medical') {
+    if (isMedical) {
       toast('Regulations require pharmacies to preserve all bill history.', 'error');
       return;
     }
@@ -175,7 +179,7 @@ export function HistoryPage() {
     <div>
       <div className="row spread" style={{ marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>Bill History</h1>
-        {bills.length > 0 && settings?.store_type !== 'medical' ? (
+        {bills.length > 0 && !isMedical ? (
           <Button title="Delete all" variant="danger" small onClick={removeAll} />
         ) : null}
       </div>

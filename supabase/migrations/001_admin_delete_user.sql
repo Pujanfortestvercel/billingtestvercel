@@ -22,7 +22,6 @@ begin
   end if;
 
   -- Explicitly delete user data from all tables to prevent orphans
-  delete from public.customizations where user_id = target_user;
   delete from public.stock_movements where user_id = target_user;
   delete from public.bill_items where bill_id in (select id from public.bills where user_id = target_user);
   delete from public.bills where user_id = target_user;
