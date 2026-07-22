@@ -19,7 +19,7 @@ import { PendingApprovalScreen } from '../screens/PendingApprovalScreen';
 function UserApp() {
   const { status, loading } = useSubscription();
   if (loading) return <Loading text="Loading…" />;
-  if (status === 'frozen') return <PendingApprovalScreen />;
+  if (status === 'frozen' || status === 'expired') return <PendingApprovalScreen />;
   return <AppStack />;
 }
 

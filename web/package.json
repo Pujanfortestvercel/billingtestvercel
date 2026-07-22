@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
-    "@capacitor/cli": "^6.2.1",
     "@capacitor/core": "^6.2.1",
     "@capacitor/filesystem": "^6.0.4",
     "@capacitor/share": "^6.0.4",
@@ -21,6 +20,7 @@
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
