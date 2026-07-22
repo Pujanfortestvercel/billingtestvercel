@@ -136,6 +136,38 @@ export async function createBill(
   if (!input.items || input.items.length === 0) {
     throw new Error('A bill must have at least one item.');
   }
+
+  // Try atomic RPC transaction
+  const { data: rpcBillId, error: rpcError } = await supabase.rpc('create_bill_transaction', {
+    p_user_id: userId,
+    p_bill_number: input.billNumber,
+    p_customer_name: input.customerName,
+    p_customer_phone: input.extra?.customer_phone ?? null,
+    p_customer_address: input.extra?.customer_address ?? null,
+    p_subtotal: input.subtotal ?? input.total,
+    p_tax_percent: input.taxPercent ?? 0,
+    p_tax_amount: input.taxAmount ?? 0,
+    p_service_charge: input.extra?.service_charge ?? 0,
+    p_discount_percent: input.extra?.discount_percent ?? 0,
+    p_discount_amount: input.discountAmount ?? 0,
+    p_total_amount: input.total,
+    p_notes: input.extra?.notes ?? null,
+    p_order_type: input.extra?.order_type ?? null,
+    p_table_number: input.extra?.table_number ?? null,
+    p_customer_id: input.customerId ?? null,
+    p_items: input.items,
+  });
+
+  if (!rpcError && rpcBillId) {
+    const { data: created, error: fetchErr } = await supabase
+      .from('bills')
+      .select('*')
+      .eq('id', rpcBillId)
+      .single();
+    if (!fetchErr && created) return created as Bill;
+  }
+
+  // Fallback to client inserts
   const { data: bill, error } = await supabase
     .from('bills')
     .insert({
@@ -157,8 +189,6 @@ export async function createBill(
   const rows = input.items.map(it => ({ bill_id: bill.id, ...it }));
   const { error: itemsError } = await supabase.from('bill_items').insert(rows);
   if (itemsError) {
-    // Undo the half-saved header so we never leave a broken bill behind. If the
-    // undo itself fails, surface that too rather than hiding an orphan row.
     const { error: undoError } = await supabase
       .from('bills')
       .delete()
@@ -181,6 +211,33 @@ export async function updateBill(
   if (!input.items || input.items.length === 0) {
     throw new Error('A bill must have at least one item.');
   }
+
+  // Get user_id of current bill
+  const { data: currentBill } = await supabase.from('bills').select('user_id').eq('id', billId).single();
+  if (currentBill?.user_id) {
+    const { error: rpcError } = await supabase.rpc('update_bill_transaction', {
+      p_bill_id: billId,
+      p_user_id: currentBill.user_id,
+      p_customer_name: input.customerName,
+      p_customer_phone: input.extra?.customer_phone ?? null,
+      p_customer_address: input.extra?.customer_address ?? null,
+      p_subtotal: input.subtotal ?? input.total,
+      p_tax_percent: input.taxPercent ?? 0,
+      p_tax_amount: input.taxAmount ?? 0,
+      p_service_charge: input.extra?.service_charge ?? 0,
+      p_discount_percent: input.extra?.discount_percent ?? 0,
+      p_discount_amount: input.discountAmount ?? 0,
+      p_total_amount: input.total,
+      p_notes: input.extra?.notes ?? null,
+      p_order_type: input.extra?.order_type ?? null,
+      p_table_number: input.extra?.table_number ?? null,
+      p_customer_id: input.customerId ?? null,
+      p_items: input.items,
+    });
+    if (!rpcError) return;
+  }
+
+  // Fallback to client updates
   const { error } = await supabase
     .from('bills')
     .update({
@@ -197,10 +254,6 @@ export async function updateBill(
     .eq('id', billId);
   if (error) throw new Error(error.message);
 
-  // Replace the lines: delete the old ones, insert the new ones. Because these
-  // are two separate calls (no transaction), first snapshot the old lines so we
-  // can restore them if the insert fails — otherwise a failed edit would leave
-  // the bill with zero line items (permanent data loss).
   const { data: oldRows, error: readError } = await supabase
     .from('bill_items')
     .select('*')
@@ -216,7 +269,6 @@ export async function updateBill(
   const rows = input.items.map(it => ({ bill_id: billId, ...it }));
   const { error: insError } = await supabase.from('bill_items').insert(rows);
   if (insError) {
-    // Restore the previous lines so the bill isn't left empty.
     if (oldRows && oldRows.length > 0) {
       await supabase.from('bill_items').insert(oldRows);
     }
@@ -227,6 +279,14 @@ export async function updateBill(
 // Delete one bill (its lines are removed automatically via the database's
 // "on delete cascade" rule).
 export async function deleteBill(billId: string): Promise<void> {
+  const { data: currentBill } = await supabase.from('bills').select('user_id').eq('id', billId).single();
+  if (currentBill?.user_id) {
+    const { error: rpcError } = await supabase.rpc('delete_bill_transaction', {
+      p_bill_id: billId,
+      p_user_id: currentBill.user_id,
+    });
+    if (!rpcError) return;
+  }
   const { error } = await supabase.from('bills').delete().eq('id', billId);
   if (error) throw new Error(error.message);
 }

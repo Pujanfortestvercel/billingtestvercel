@@ -7,7 +7,7 @@
 // Any screen can do:   const { user, isAdmin, signIn } = useAuth();
 // ---------------------------------------------------------------------------
 
-import React, {
+import {
   createContext,
   useCallback,
   useContext,

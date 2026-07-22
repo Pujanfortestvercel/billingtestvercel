@@ -3,7 +3,7 @@
 // so we never have to filter by user_id when reading: the database does it.
 // (We DO set user_id when creating, because the security rule requires it.)
 // ---------------------------------------------------------------------------
-import { supabase } from '../lib/supabase';
+import { supabase, escapeLike } from '../lib/supabase';
 import type { Customer } from '../types/models';
 
 // All of this user's customers, alphabetical.
@@ -29,7 +29,7 @@ export async function fetchCustomersPage(params: {
     .order('customer_name', { ascending: true })
     .range(params.offset, params.offset + params.limit - 1);
   const s = params.search?.trim();
-  if (s) query = query.ilike('customer_name', `%${s}%`);
+  if (s) query = query.ilike('customer_name', `%${escapeLike(s)}%`);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as Customer[];
@@ -45,7 +45,7 @@ export async function searchCustomers(
   const { data, error } = await supabase
     .from('customers')
     .select('*')
-    .ilike('customer_name', `${q}%`) // ilike = case-insensitive; `${q}%` = prefix
+    .ilike('customer_name', `${escapeLike(q)}%`) // ilike = case-insensitive; `${q}%` = prefix
     .order('customer_name', { ascending: true })
     .limit(limit);
   if (error) throw new Error(error.message);

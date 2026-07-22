@@ -32,7 +32,10 @@ export function DashboardPage() {
     if (Capacitor.isNativePlatform()) {
       window.open('intent://#Intent;package=com.growthaccel.pharmarack_retailer.pharmarack_retailer;end', '_system');
     } else {
-      window.open('https://www.pharmarack.com', '_blank');
+      window.open(
+        'https://play.google.com/store/apps/details?id=com.growthaccel.pharmarack_retailer.pharmarack_retailer',
+        '_blank'
+      );
     }
   };
 
