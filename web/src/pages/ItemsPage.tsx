@@ -50,7 +50,8 @@ function splitCsvLine(line: string): string[] {
 }
 
 function parseCsv(text: string): CsvRow[] {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const cleanText = text.replace(/^\uFEFF/, '');
+  const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) return [];
   // Skip a header row if the first line looks like column names.
   const start = /(^|,)\s*name\s*(,|$)/i.test(lines[0]) ? 1 : 0;

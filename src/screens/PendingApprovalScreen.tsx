@@ -11,7 +11,7 @@ import { colors, fontSize, spacing } from '../theme';
 
 export function PendingApprovalScreen() {
   const { user, signOut } = useAuth();
-  const { refresh } = useSubscription();
+  const { status, refresh } = useSubscription();
   const [checking, setChecking] = useState(false);
 
   async function checkAgain() {
@@ -23,19 +23,24 @@ export function PendingApprovalScreen() {
     }
   }
 
+  const isExpired = status === 'expired';
+
   return (
     <ScreenContainer scroll>
       <View style={styles.header}>
-        <Text style={styles.emoji}>🔒</Text>
-        <Text style={styles.title}>Account not active yet</Text>
+        <Text style={styles.emoji}>{isExpired ? '⏳' : '🔒'}</Text>
+        <Text style={styles.title}>
+          {isExpired ? 'Subscription Expired' : 'Account not active yet'}
+        </Text>
         <Text style={styles.subtitle}>
-          Your account ({user?.email}) is frozen. An admin needs to unfreeze it
-          to start your 21-day free trial. Please check back soon.
+          {isExpired
+            ? `Your free trial/subscription for ${user?.email ?? 'your account'} has expired. Please contact the administrator to renew your plan.`
+            : `Your account (${user?.email}) is frozen. An admin needs to unfreeze it to start your 21-day free trial. Please check back soon.`}
         </Text>
       </View>
 
       <Card>
-        <Text style={styles.note}>Already approved? Tap to refresh.</Text>
+        <Text style={styles.note}>Already updated? Tap to refresh.</Text>
         <Button title="Check again" onPress={checkAgain} loading={checking} />
       </Card>
 

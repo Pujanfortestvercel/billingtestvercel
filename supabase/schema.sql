@@ -487,6 +487,26 @@ grant execute on function public.create_bill_transaction to authenticated;
 grant execute on function public.update_bill_transaction to authenticated;
 grant execute on function public.delete_bill_transaction to authenticated;
 
+-- HARDENING & MEDICAL PROTECTION
+create unique index if not exists idx_bills_user_bill_number on public.bills(user_id, bill_number);
+
+create or replace function public.check_medical_bill_deletion()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare v_store_type text;
+begin
+  select store_type into v_store_type from public.settings where user_id = OLD.user_id;
+  if v_store_type = 'medical' then
+    raise exception 'Medical store bills cannot be deleted due to regulatory compliance requirements.';
+  end if;
+  return OLD;
+end;
+$$;
+
+drop trigger if exists trg_prevent_medical_bill_delete on public.bills;
+create trigger trg_prevent_medical_bill_delete
+  before delete on public.bills
+  for each row execute function public.check_medical_bill_deletion();
+
 -- ===========================================================================
 -- Done! To make an account an admin, sign up once in the app, then run:
 --   update public.profiles set role = 'admin' where email = 'you@example.com';

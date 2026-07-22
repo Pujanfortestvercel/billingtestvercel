@@ -32,7 +32,7 @@ export async function adjustStock(
 // Tracked items at or below their reorder level (lowest stock first). Powers
 // the dashboard low-stock widget. PostgREST can't compare two columns, so we
 // fetch tracked items ordered by stock and filter against reorder_level here.
-export async function listLowStock(limit = 200): Promise<Item[]> {
+export async function listLowStock(limit = 1000): Promise<Item[]> {
   const { data, error } = await supabase
     .from('items')
     .select('*')
