@@ -4,7 +4,7 @@
 // screen, so billing can be blocked when expired and the dashboard can show a
 // countdown. Call `refresh()` after changes.
 // ---------------------------------------------------------------------------
-import React, {
+import {
   createContext,
   useCallback,
   useContext,
