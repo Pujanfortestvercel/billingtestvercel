@@ -202,7 +202,7 @@ export function SettingsPage() {
 
       <Button title="Save settings" loading={saving} onClick={onSave} />
       <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
-        Current store type: <strong>{store.label}</strong>
+        Current store type: <strong>{store.label}</strong> · App Version: <strong>v1.0.0</strong>
       </p>
     </div>
   );

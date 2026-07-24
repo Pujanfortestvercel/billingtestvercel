@@ -59,12 +59,13 @@ export async function getNextBillNumber(): Promise<string> {
   return `${BILL_NUMBER_PREFIX}${highest + 1}`;
 }
 
-// All of the user's bills, newest first.
-export async function listBills(): Promise<Bill[]> {
+// All of the user's bills, newest first (capped for memory efficiency).
+export async function listBills(limit = 1000): Promise<Bill[]> {
   const { data, error } = await supabase
     .from('bills')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(limit);
   if (error) throw new Error(error.message);
   return (data ?? []) as Bill[];
 }

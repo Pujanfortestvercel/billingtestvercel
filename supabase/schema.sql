@@ -52,23 +52,40 @@ create table if not exists public.items (
 
 -- 4) BILLS — the header/summary of each generated bill.
 create table if not exists public.bills (
-  id            uuid        primary key default gen_random_uuid(),
-  user_id       uuid        not null references auth.users(id) on delete cascade,
-  customer_id   uuid        references public.customers(id) on delete set null,
-  customer_name text        not null,
-  bill_number   text        not null,
-  total_amount  numeric(12,2) not null default 0,
-  created_at    timestamptz not null default now()
+  id               uuid          primary key default gen_random_uuid(),
+  user_id          uuid          not null references auth.users(id) on delete cascade,
+  customer_id      uuid          references public.customers(id) on delete set null,
+  customer_name    text          not null,
+  customer_phone   text,
+  customer_address text,
+  bill_number      text          not null,
+  subtotal         numeric(12,2) not null default 0,
+  discount_percent numeric(6,2)  not null default 0,
+  discount_amount  numeric(12,2) not null default 0,
+  service_charge   numeric(12,2) not null default 0,
+  tax_percent      numeric(6,2)  not null default 0,
+  tax_amount       numeric(12,2) not null default 0,
+  total_amount     numeric(12,2) not null default 0,
+  notes            text,
+  order_type       text,
+  table_number     text,
+  extra            jsonb         not null default '{}'::jsonb,
+  created_at       timestamptz   not null default now()
 );
 
 -- 5) BILL_ITEMS — the line rows inside each bill.
 create table if not exists public.bill_items (
-  id        uuid          primary key default gen_random_uuid(),
-  bill_id   uuid          not null references public.bills(id) on delete cascade,
-  item_name text          not null,
-  qty       numeric(12,2) not null,
-  rate      numeric(12,2) not null,
-  total     numeric(12,2) not null
+  id          uuid          primary key default gen_random_uuid(),
+  bill_id     uuid          not null references public.bills(id) on delete cascade,
+  item_id     uuid          references public.items(id) on delete set null,
+  item_name   text          not null,
+  qty         numeric(12,2) not null,
+  rate        numeric(12,2) not null,
+  discount    numeric(6,2)  not null default 0,
+  total       numeric(12,2) not null,
+  batch_no    text,
+  expiry_date date,
+  meta        jsonb         not null default '{}'::jsonb
 );
 
 -- ===========================================================================

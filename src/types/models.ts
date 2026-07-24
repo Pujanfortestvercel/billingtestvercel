@@ -101,6 +101,7 @@ export interface BillExtra {
 export interface BillItem {
   id: string;
   bill_id: string; // which bill this line belongs to
+  item_id?: string | null;
   item_name: string;
   qty: number;
   rate: number;

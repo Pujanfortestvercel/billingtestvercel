@@ -154,7 +154,7 @@ export function SettingsScreen() {
 
       <Button title="Save settings" onPress={onSave} loading={saving} style={styles.save} />
       <Text style={styles.current}>
-        Current store type: <Text style={styles.currentStrong}>{store.label}</Text>
+        Current store type: <Text style={styles.currentStrong}>{store.label}</Text> · App Version: <Text style={styles.currentStrong}>v1.0.0</Text>
       </Text>
     </ScreenContainer>
   );

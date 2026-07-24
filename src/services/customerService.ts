@@ -97,7 +97,7 @@ export async function findCustomerByName(name: string): Promise<Customer | null>
   const { data, error } = await supabase
     .from('customers')
     .select('*')
-    .ilike('customer_name', trimmed)
+    .ilike('customer_name', escapeLike(trimmed))
     .limit(1);
   if (error) throw new Error(error.message);
   return data && data.length > 0 ? (data[0] as Customer) : null;
@@ -113,7 +113,7 @@ export async function findOrCreateCustomer(
   const { data, error } = await supabase
     .from('customers')
     .select('*')
-    .ilike('customer_name', trimmed) // exact name, ignoring case
+    .ilike('customer_name', escapeLike(trimmed)) // exact name, ignoring case
     .limit(1);
   if (error) throw new Error(error.message);
   if (data && data.length > 0) return data[0] as Customer;

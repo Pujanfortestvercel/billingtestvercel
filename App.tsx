@@ -18,6 +18,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { NotConfiguredScreen } from './src/screens/NotConfiguredScreen';
 import { Loading } from './src/components/common/Loading';
+import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 import { isSupabaseConfigured } from './src/config/supabase';
 import { colors } from './src/theme';
 
@@ -38,12 +39,14 @@ function Root() {
 
 function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      <AuthProvider>
-        <Root />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+        <AuthProvider>
+          <Root />
+        </AuthProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 
