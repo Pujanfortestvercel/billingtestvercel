@@ -35,6 +35,7 @@ import { formatCurrency, toNumber } from '../utils/format';
 
 type Row = {
   key: string;
+  item_id?: string | null;
   item_name: string;
   qty: string;
   rate: string;
@@ -63,6 +64,7 @@ export function BillingPage() {
   const newKey = () => String(keyRef.current++);
   const emptyRow = (): Row => ({
     key: newKey(),
+    item_id: null,
     item_name: '',
     qty: '',
     rate: '',
@@ -134,6 +136,7 @@ export function BillingPage() {
           bill.items.length
             ? bill.items.map(it => ({
                 key: newKey(),
+                item_id: it.item_id ?? null,
                 item_name: it.item_name,
                 qty: String(it.qty),
                 rate: String(it.rate),
@@ -215,6 +218,7 @@ export function BillingPage() {
       });
       if (errors.length > 0) {
         toast('Please fix:\n' + errors.map(e => `• ${e}`).join('\n'), 'error');
+        setSaving(false);
         return;
       }
 
@@ -227,7 +231,11 @@ export function BillingPage() {
       // carries an item_id — the DB then adjusts stock automatically for any
       // item that is tracked.
       const resolvedItems = await Promise.all(
-        validRows.map(r => findOrCreateItem(user.id, r.item_name, toNumber(r.rate))),
+        validRows.map(r =>
+          r.item_id
+            ? Promise.resolve({ id: r.item_id, item_name: r.item_name, track_stock: false, stock_qty: 0 })
+            : findOrCreateItem(user.id, r.item_name, toNumber(r.rate)),
+        ),
       );
 
       // Inventory: warn (but still allow — per the chosen policy) when a NEW
