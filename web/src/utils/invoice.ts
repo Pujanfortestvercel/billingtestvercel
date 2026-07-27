@@ -179,7 +179,11 @@ export function invoiceInnerHtml(
 function fullDoc(inner: string, title: string): string {
   return `<!doctype html><html><head><meta charset="utf-8" />
     <title>${esc(title)}</title>
-    <style>body{margin:0;padding:40px;max-width:820px;margin:0 auto}@media print{body{padding:0}}</style>
+    <style>
+      @page { margin: 0; size: auto; }
+      body { margin: 0; padding: 15mm; max-width: 820px; margin: 0 auto; }
+      @media print { body { padding: 10mm; } }
+    </style>
     </head><body>${inner}</body></html>`;
 }
 
