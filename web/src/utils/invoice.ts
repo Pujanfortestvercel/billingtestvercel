@@ -148,10 +148,19 @@ export function invoiceInnerHtml(
       </div>
     </div>
 
-    <div style="margin-top:16px;font-size:14px">
-      <strong>${esc(store.customerLabel ? store.customerLabel + ':' : 'Billed to:')}</strong> ${esc(bill.customer_name)}
-      ${bill.extra?.patient_address ? `<div class="muted">Address: ${esc(String(bill.extra.patient_address))}</div>` : ''}
-      ${bill.extra?.doctor_name ? `<div class="muted" style="margin-top:4px"><strong>Dr. Name:</strong> ${esc(String(bill.extra.doctor_name))}${bill.extra?.doctor_address ? ` (${esc(String(bill.extra.doctor_address))})` : ''}</div>` : ''}
+    <div style="margin-top:16px; padding:12px; background:#F9FAFB; border:1px solid #E5E7EB; border-radius:6px; font-size:13px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div>
+        <div style="font-weight:700; color:#2563EB; margin-bottom:3px;">${esc(store.customerLabel ? 'Patient Details' : 'Billed To')}</div>
+        <div><strong>${esc(store.customerLabel ?? 'Name')}:</strong> ${esc(bill.customer_name)}</div>
+        ${bill.extra?.patient_address ? `<div style="margin-top:2px"><strong>Address:</strong> ${esc(String(bill.extra.patient_address))}</div>` : ''}
+      </div>
+      ${bill.extra?.doctor_name || bill.extra?.doctor_address ? `
+      <div>
+        <div style="font-weight:700; color:#2563EB; margin-bottom:3px;">Prescribing Doctor</div>
+        ${bill.extra?.doctor_name ? `<div><strong>Doctor Name:</strong> ${esc(String(bill.extra.doctor_name))}</div>` : ''}
+        ${bill.extra?.doctor_address ? `<div style="margin-top:2px"><strong>Doctor Address:</strong> ${esc(String(bill.extra.doctor_address))}</div>` : ''}
+      </div>
+      ` : ''}
     </div>
 
     <table>
@@ -326,14 +335,23 @@ export function buildInvoiceText(
   items: BillItem[],
   settings?: Settings | null,
 ): string {
+  const store = getStoreConfig(bill.extra?.store_type ?? settings?.store_type);
   const shopName = settings?.shop_name || APP_NAME;
   const lines = items.map(
     it => `• ${it.item_name}  —  ${it.qty} x ${formatCurrency(it.rate)} = ${formatCurrency(it.total)}`,
   );
-  return [
+  const custLabel = store.customerLabel ?? 'Customer';
+  const headerLines = [
     `${shopName} — Invoice ${bill.bill_number}`,
     formatDateTime(bill.created_at),
-    `Customer: ${bill.customer_name}`,
+    `${custLabel}: ${bill.customer_name}`,
+    bill.extra?.patient_address ? `Patient Address: ${bill.extra.patient_address}` : '',
+    bill.extra?.doctor_name ? `Prescribing Doctor: ${bill.extra.doctor_name}` : '',
+    bill.extra?.doctor_address ? `Doctor Address: ${bill.extra.doctor_address}` : '',
+  ].filter(Boolean);
+
+  return [
+    ...headerLines,
     '',
     ...lines,
     '',
