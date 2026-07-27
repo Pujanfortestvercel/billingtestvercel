@@ -20,8 +20,12 @@
 //   NEVER paste the "service_role" SECRET key here — that one bypasses security.
 // ---------------------------------------------------------------------------
 
-export const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL ?? '';
-export const SUPABASE_ANON_KEY = (import.meta as any).env.VITE_SUPABASE_ANON_KEY ?? '';
+export const SUPABASE_URL =
+  (import.meta as any).env.VITE_SUPABASE_URL ??
+  'https://yeijmqntdditskhptgbl.supabase.co';
+export const SUPABASE_ANON_KEY =
+  (import.meta as any).env.VITE_SUPABASE_ANON_KEY ??
+  'sb_publishable_PU19hw0CGh8nHlaa8NX8rg_VtNirLQU';
 
 // True once you've added real values in your .env file. Until then, the app
 // shows a friendly "connect your Supabase project" screen instead of crashing.
