@@ -187,3 +187,14 @@ button { font-family: inherit; }
 /* fade-in for routed pages */
 .page-enter { animation: fade 0.2s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Suppress browser URL & page headers/footers during printing */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  body {
+    padding: 15mm;
+  }
+}
