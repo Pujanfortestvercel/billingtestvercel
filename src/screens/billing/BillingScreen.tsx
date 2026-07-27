@@ -95,6 +95,9 @@ export function BillingScreen() {
   const [tableNo, setTableNo] = useState('');
   const [orderType, setOrderType] = useState('dine-in');
   const [notes, setNotes] = useState('');
+  const [patientAddress, setPatientAddress] = useState('');
+  const [doctorName, setDoctorName] = useState('');
+  const [doctorAddress, setDoctorAddress] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -110,6 +113,9 @@ export function BillingScreen() {
     setTableNo('');
     setOrderType('dine-in');
     setNotes('');
+    setPatientAddress('');
+    setDoctorName('');
+    setDoctorAddress('');
     try {
       setBillNumber(await getNextBillNumber());
     } catch {
@@ -144,6 +150,9 @@ export function BillingScreen() {
         setTableNo(extra.table_no ?? '');
         setOrderType(extra.order_type ?? 'dine-in');
         setNotes(extra.notes ?? '');
+        setPatientAddress(typeof extra.patient_address === 'string' ? extra.patient_address : '');
+        setDoctorName(typeof extra.doctor_name === 'string' ? extra.doctor_name : '');
+        setDoctorAddress(typeof extra.doctor_address === 'string' ? extra.doctor_address : '');
         setRows(
           bill.items.length
             ? bill.items.map(it => ({
@@ -288,6 +297,11 @@ export function BillingScreen() {
         extra.table_no = tableNo.trim();
       if (store.billExtras.includes('order_type')) extra.order_type = orderType;
       if (store.billExtras.includes('notes') && notes.trim()) extra.notes = notes.trim();
+      if (store.medicalExtras) {
+        if (patientAddress.trim()) extra.patient_address = patientAddress.trim();
+        if (doctorName.trim()) extra.doctor_name = doctorName.trim();
+        if (doctorAddress.trim()) extra.doctor_address = doctorAddress.trim();
+      }
 
       const input = {
         customerId: customer.id,
@@ -384,9 +398,9 @@ export function BillingScreen() {
         </Card>
       ) : null}
 
-      {/* Customer */}
+      {/* Customer / Patient */}
       <AutocompleteInput<Customer>
-        label="Customer"
+        label={store.customerLabel ?? 'Customer'}
         value={customerName}
         onChangeText={t => {
           setCustomerName(t);
@@ -399,10 +413,44 @@ export function BillingScreen() {
           setCustomerName(c.customer_name);
           setSelectedCustomer(c);
         }}
-        placeholder="Type or pick a customer"
+        placeholder={
+          store.customerLabel
+            ? `Type or pick a ${store.customerLabel.toLowerCase()}`
+            : 'Type or pick a customer'
+        }
       />
       {selectedCustomer?.is_frozen ? (
         <Text style={styles.frozenWarn}>This customer is FROZEN and cannot be billed.</Text>
+      ) : null}
+
+      {/* Medical Extras: Patient & Doctor Info */}
+      {store.medicalExtras ? (
+        <Card>
+          <Text style={styles.fieldLabel}>Patient Address</Text>
+          <TextInput
+            value={patientAddress}
+            onChangeText={setPatientAddress}
+            placeholder="Patient address"
+            placeholderTextColor={colors.textMuted}
+            style={styles.input}
+          />
+          <Text style={styles.fieldLabel}>Doctor Name</Text>
+          <TextInput
+            value={doctorName}
+            onChangeText={setDoctorName}
+            placeholder="Prescribing doctor"
+            placeholderTextColor={colors.textMuted}
+            style={styles.input}
+          />
+          <Text style={styles.fieldLabel}>Doctor Address</Text>
+          <TextInput
+            value={doctorAddress}
+            onChangeText={setDoctorAddress}
+            placeholder="Doctor's clinic address"
+            placeholderTextColor={colors.textMuted}
+            style={styles.input}
+          />
+        </Card>
       ) : null}
 
       {/* Item rows */}
@@ -552,17 +600,19 @@ export function BillingScreen() {
               />
             </View>
           ) : null}
-          <View style={styles.chargeField}>
-            <Text style={styles.smallLabel}>Tax / GST %</Text>
-            <TextInput
-              value={tax}
-              onChangeText={setTax}
-              keyboardType="numeric"
-              placeholder="0"
-              placeholderTextColor={colors.textMuted}
-              style={styles.smallInput}
-            />
-          </View>
+          {!store.hideTax ? (
+            <View style={styles.chargeField}>
+              <Text style={styles.smallLabel}>Tax / GST %</Text>
+              <TextInput
+                value={tax}
+                onChangeText={setTax}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor={colors.textMuted}
+                style={styles.smallInput}
+              />
+            </View>
+          ) : null}
         </View>
 
         {store.billExtras.includes('notes') ? (

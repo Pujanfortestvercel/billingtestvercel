@@ -148,7 +148,11 @@ export function invoiceInnerHtml(
       </div>
     </div>
 
-    <div style="margin-top:16px;font-size:14px"><strong>Billed to:</strong> ${esc(bill.customer_name)}</div>
+    <div style="margin-top:16px;font-size:14px">
+      <strong>${esc(store.customerLabel ? store.customerLabel + ':' : 'Billed to:')}</strong> ${esc(bill.customer_name)}
+      ${bill.extra?.patient_address ? `<div class="muted">Address: ${esc(String(bill.extra.patient_address))}</div>` : ''}
+      ${bill.extra?.doctor_name ? `<div class="muted" style="margin-top:4px"><strong>Dr. Name:</strong> ${esc(String(bill.extra.doctor_name))}${bill.extra?.doctor_address ? ` (${esc(String(bill.extra.doctor_address))})` : ''}</div>` : ''}
+    </div>
 
     <table>
       <thead><tr>${headCells}</tr></thead>
