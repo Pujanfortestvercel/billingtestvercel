@@ -39,21 +39,7 @@ export function DashboardScreen() {
   const [expiring, setExpiring] = useState<ExpiringLine[]>([]);
   const [lowStock, setLowStock] = useState<Item[]>([]);
 
-  const handleOpenPharmarack = async () => {
-    const packageId = 'com.growthaccel.pharmarack_retailer.pharmarack_retailer';
-    const playStoreUrl = `https://play.google.com/store/apps/details?id=${packageId}`;
-    try {
-      const intentUrl = `intent://#Intent;package=${packageId};end`;
-      const supported = await Linking.canOpenURL(intentUrl);
-      if (supported) {
-        await Linking.openURL(intentUrl);
-      } else {
-        await Linking.openURL(playStoreUrl);
-      }
-    } catch {
-      await Linking.openURL(playStoreUrl);
-    }
-  };
+
 
   const loadStats = useCallback(async () => {
     try {
@@ -176,14 +162,6 @@ export function DashboardScreen() {
           onPress={() => navigation.navigate('Billing')}
           style={styles.newBill}
         />
-        {store.key === 'medical' ? (
-          <Button
-            title="💊  Open Pharmarack"
-            variant="ghost"
-            onPress={handleOpenPharmarack}
-            style={{ marginTop: spacing.sm }}
-          />
-        ) : null}
       </Card>
 
       {/* Expiry reminders (medical stores) */}
