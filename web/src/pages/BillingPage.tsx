@@ -395,61 +395,96 @@ export function BillingPage() {
         </Card>
       ) : null}
 
-      <Autocomplete<Customer>
-        label={store.customerLabel ?? 'Customer'}
-        value={customerName}
-        onChangeText={t => {
-          setCustomerName(t);
-          setSelectedCustomer(null);
-        }}
-        fetchSuggestions={q => searchCustomers(q)}
-        getKey={c => c.id}
-        getLabel={c => c.customer_name}
-        onSelect={c => {
-          setCustomerName(c.customer_name);
-          setSelectedCustomer(c);
-        }}
-        placeholder={store.customerLabel ? `Type or pick a ${store.customerLabel.toLowerCase()}` : 'Type or pick a customer'}
-      />
-      {selectedCustomer?.is_frozen ? (
-        <div className="field-error" style={{ marginTop: -8, marginBottom: 12 }}>
-          This customer is FROZEN and cannot be billed.
-        </div>
-      ) : null}
-
+      {/* Patient / Customer Details */}
       {store.medicalExtras ? (
-        <Card style={{ marginBottom: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label className="field-label">Patient Address</label>
-              <input
-                className="input"
-                value={patientAddress}
-                onChange={e => setPatientAddress(e.target.value)}
-                placeholder="Patient address"
-              />
+        <>
+          <Card style={{ marginBottom: 16 }}>
+            <h4 style={{ marginTop: 0, marginBottom: 12 }}>Patient Details</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <Autocomplete<Customer>
+                  label="Patient Name"
+                  value={customerName}
+                  onChangeText={t => {
+                    setCustomerName(t);
+                    setSelectedCustomer(null);
+                  }}
+                  fetchSuggestions={q => searchCustomers(q)}
+                  getKey={c => c.id}
+                  getLabel={c => c.customer_name}
+                  onSelect={c => {
+                    setCustomerName(c.customer_name);
+                    setSelectedCustomer(c);
+                  }}
+                  placeholder="Type or pick a patient name"
+                />
+                {selectedCustomer?.is_frozen ? (
+                  <div className="field-error" style={{ marginTop: -8, marginBottom: 12 }}>
+                    This patient account is FROZEN and cannot be billed.
+                  </div>
+                ) : null}
+              </div>
+              <div>
+                <label className="field-label">Patient Address</label>
+                <input
+                  className="input"
+                  value={patientAddress}
+                  onChange={e => setPatientAddress(e.target.value)}
+                  placeholder="Patient address"
+                />
+              </div>
             </div>
-            <div>
-              <label className="field-label">Doctor Name</label>
-              <input
-                className="input"
-                value={doctorName}
-                onChange={e => setDoctorName(e.target.value)}
-                placeholder="Prescribing doctor"
-              />
+          </Card>
+
+          <Card style={{ marginBottom: 16 }}>
+            <h4 style={{ marginTop: 0, marginBottom: 12 }}>Prescribing Doctor Details</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label className="field-label">Doctor Name</label>
+                <input
+                  className="input"
+                  value={doctorName}
+                  onChange={e => setDoctorName(e.target.value)}
+                  placeholder="Prescribing doctor"
+                />
+              </div>
+              <div>
+                <label className="field-label">Doctor Address</label>
+                <input
+                  className="input"
+                  value={doctorAddress}
+                  onChange={e => setDoctorAddress(e.target.value)}
+                  placeholder="Doctor's clinic address"
+                />
+              </div>
             </div>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <label className="field-label">Doctor Address</label>
-            <input
-              className="input"
-              value={doctorAddress}
-              onChange={e => setDoctorAddress(e.target.value)}
-              placeholder="Doctor's clinic address"
-            />
-          </div>
-        </Card>
-      ) : null}
+          </Card>
+        </>
+      ) : (
+        <>
+          <Autocomplete<Customer>
+            label="Customer"
+            value={customerName}
+            onChangeText={t => {
+              setCustomerName(t);
+              setSelectedCustomer(null);
+            }}
+            fetchSuggestions={q => searchCustomers(q)}
+            getKey={c => c.id}
+            getLabel={c => c.customer_name}
+            onSelect={c => {
+              setCustomerName(c.customer_name);
+              setSelectedCustomer(c);
+            }}
+            placeholder="Type or pick a customer"
+          />
+          {selectedCustomer?.is_frozen ? (
+            <div className="field-error" style={{ marginTop: -8, marginBottom: 12 }}>
+              This customer is FROZEN and cannot be billed.
+            </div>
+          ) : null}
+        </>
+      )}
 
       <h3 style={{ marginBottom: 10 }}>Items</h3>
       {rows.map((row, index) => {

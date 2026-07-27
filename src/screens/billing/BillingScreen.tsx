@@ -398,60 +398,84 @@ export function BillingScreen() {
         </Card>
       ) : null}
 
-      {/* Customer / Patient */}
-      <AutocompleteInput<Customer>
-        label={store.customerLabel ?? 'Customer'}
-        value={customerName}
-        onChangeText={t => {
-          setCustomerName(t);
-          setSelectedCustomer(null);
-        }}
-        fetchSuggestions={q => searchCustomers(q)}
-        getKey={c => c.id}
-        getLabel={c => c.customer_name}
-        onSelect={c => {
-          setCustomerName(c.customer_name);
-          setSelectedCustomer(c);
-        }}
-        placeholder={
-          store.customerLabel
-            ? `Type or pick a ${store.customerLabel.toLowerCase()}`
-            : 'Type or pick a customer'
-        }
-      />
-      {selectedCustomer?.is_frozen ? (
-        <Text style={styles.frozenWarn}>This customer is FROZEN and cannot be billed.</Text>
-      ) : null}
-
-      {/* Medical Extras: Patient & Doctor Info */}
+      {/* Patient / Customer Details */}
       {store.medicalExtras ? (
-        <Card>
-          <Text style={styles.fieldLabel}>Patient Address</Text>
-          <TextInput
-            value={patientAddress}
-            onChangeText={setPatientAddress}
-            placeholder="Patient address"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
+        <>
+          <Card>
+            <Text style={styles.sectionTitle}>Patient Details</Text>
+            <AutocompleteInput<Customer>
+              label="Patient Name"
+              value={customerName}
+              onChangeText={t => {
+                setCustomerName(t);
+                setSelectedCustomer(null);
+              }}
+              fetchSuggestions={q => searchCustomers(q)}
+              getKey={c => c.id}
+              getLabel={c => c.customer_name}
+              onSelect={c => {
+                setCustomerName(c.customer_name);
+                setSelectedCustomer(c);
+              }}
+              placeholder="Type or pick a patient name"
+            />
+            {selectedCustomer?.is_frozen ? (
+              <Text style={styles.frozenWarn}>This patient account is FROZEN and cannot be billed.</Text>
+            ) : null}
+
+            <Text style={styles.fieldLabel}>Patient Address</Text>
+            <TextInput
+              value={patientAddress}
+              onChangeText={setPatientAddress}
+              placeholder="Patient address"
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+            />
+          </Card>
+
+          <Card>
+            <Text style={styles.sectionTitle}>Prescribing Doctor Details</Text>
+            <Text style={styles.fieldLabel}>Doctor Name</Text>
+            <TextInput
+              value={doctorName}
+              onChangeText={setDoctorName}
+              placeholder="Prescribing doctor"
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+            />
+            <Text style={styles.fieldLabel}>Doctor Address</Text>
+            <TextInput
+              value={doctorAddress}
+              onChangeText={setDoctorAddress}
+              placeholder="Doctor's clinic address"
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+            />
+          </Card>
+        </>
+      ) : (
+        <>
+          <AutocompleteInput<Customer>
+            label="Customer"
+            value={customerName}
+            onChangeText={t => {
+              setCustomerName(t);
+              setSelectedCustomer(null);
+            }}
+            fetchSuggestions={q => searchCustomers(q)}
+            getKey={c => c.id}
+            getLabel={c => c.customer_name}
+            onSelect={c => {
+              setCustomerName(c.customer_name);
+              setSelectedCustomer(c);
+            }}
+            placeholder="Type or pick a customer"
           />
-          <Text style={styles.fieldLabel}>Doctor Name</Text>
-          <TextInput
-            value={doctorName}
-            onChangeText={setDoctorName}
-            placeholder="Prescribing doctor"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-          />
-          <Text style={styles.fieldLabel}>Doctor Address</Text>
-          <TextInput
-            value={doctorAddress}
-            onChangeText={setDoctorAddress}
-            placeholder="Doctor's clinic address"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-          />
-        </Card>
-      ) : null}
+          {selectedCustomer?.is_frozen ? (
+            <Text style={styles.frozenWarn}>This customer is FROZEN and cannot be billed.</Text>
+          ) : null}
+        </>
+      )}
 
       {/* Item rows */}
       <Text style={styles.sectionTitle}>Items</Text>
