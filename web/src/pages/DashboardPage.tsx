@@ -28,16 +28,7 @@ export function DashboardPage() {
   const [expiring, setExpiring] = useState<ExpiringLine[]>([]);
   const [lowStock, setLowStock] = useState<Item[]>([]);
 
-  const handleOpenPharmarack = () => {
-    if (Capacitor.isNativePlatform()) {
-      window.open('intent://#Intent;package=com.growthaccel.pharmarack_retailer.pharmarack_retailer;end', '_system');
-    } else {
-      window.open(
-        'https://play.google.com/store/apps/details?id=com.growthaccel.pharmarack_retailer.pharmarack_retailer',
-        '_blank'
-      );
-    }
-  };
+
 
   useEffect(() => {
     getDashboardStats()
@@ -98,13 +89,6 @@ export function DashboardPage() {
             </div>
           </div>
           <div className="row gap-sm" style={{ alignItems: 'center' }}>
-            {store?.key === 'medical' ? (
-              <Button
-                title="💊 Open Pharmarack"
-                variant="ghost"
-                onClick={handleOpenPharmarack}
-              />
-            ) : null}
             <Button title="🧾 Create new bill" onClick={() => navigate('/billing')} />
           </div>
         </div>
