@@ -85,6 +85,9 @@ export function BillingPage() {
   const [tableNo, setTableNo] = useState('');
   const [orderType, setOrderType] = useState('dine-in');
   const [notes, setNotes] = useState('');
+  const [patientAddress, setPatientAddress] = useState('');
+  const [doctorName, setDoctorName] = useState('');
+  const [doctorAddress, setDoctorAddress] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -100,6 +103,9 @@ export function BillingPage() {
     setTableNo('');
     setOrderType('dine-in');
     setNotes('');
+    setPatientAddress('');
+    setDoctorName('');
+    setDoctorAddress('');
     try {
       setBillNumber(await getNextBillNumber());
     } catch {
@@ -132,6 +138,9 @@ export function BillingPage() {
         setTableNo(extra.table_no ?? '');
         setOrderType(extra.order_type ?? 'dine-in');
         setNotes(extra.notes ?? '');
+        setPatientAddress(typeof extra.patient_address === 'string' ? extra.patient_address : '');
+        setDoctorName(typeof extra.doctor_name === 'string' ? extra.doctor_name : '');
+        setDoctorAddress(typeof extra.doctor_address === 'string' ? extra.doctor_address : '');
         setRows(
           bill.items.length
             ? bill.items.map(it => ({
@@ -286,6 +295,11 @@ export function BillingPage() {
       if (store.billExtras.includes('order_type')) extra.order_type = orderType;
       if (store.billExtras.includes('notes') && notes.trim())
         extra.notes = notes.trim();
+      if (store.medicalExtras) {
+        if (patientAddress.trim()) extra.patient_address = patientAddress.trim();
+        if (doctorName.trim()) extra.doctor_name = doctorName.trim();
+        if (doctorAddress.trim()) extra.doctor_address = doctorAddress.trim();
+      }
 
       const input = {
         customerId: customer.id,
@@ -382,7 +396,7 @@ export function BillingPage() {
       ) : null}
 
       <Autocomplete<Customer>
-        label="Customer"
+        label={store.customerLabel ?? 'Customer'}
         value={customerName}
         onChangeText={t => {
           setCustomerName(t);
@@ -395,12 +409,46 @@ export function BillingPage() {
           setCustomerName(c.customer_name);
           setSelectedCustomer(c);
         }}
-        placeholder="Type or pick a customer"
+        placeholder={store.customerLabel ? `Type or pick a ${store.customerLabel.toLowerCase()}` : 'Type or pick a customer'}
       />
       {selectedCustomer?.is_frozen ? (
         <div className="field-error" style={{ marginTop: -8, marginBottom: 12 }}>
           This customer is FROZEN and cannot be billed.
         </div>
+      ) : null}
+
+      {store.medicalExtras ? (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label className="field-label">Patient Address</label>
+              <input
+                className="input"
+                value={patientAddress}
+                onChange={e => setPatientAddress(e.target.value)}
+                placeholder="Patient address"
+              />
+            </div>
+            <div>
+              <label className="field-label">Doctor Name</label>
+              <input
+                className="input"
+                value={doctorName}
+                onChange={e => setDoctorName(e.target.value)}
+                placeholder="Prescribing doctor"
+              />
+            </div>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label className="field-label">Doctor Address</label>
+            <input
+              className="input"
+              value={doctorAddress}
+              onChange={e => setDoctorAddress(e.target.value)}
+              placeholder="Doctor's clinic address"
+            />
+          </div>
+        </Card>
       ) : null}
 
       <h3 style={{ marginBottom: 10 }}>Items</h3>
@@ -552,8 +600,8 @@ export function BillingPage() {
           style={{
             display: 'grid',
             gridTemplateColumns: store.billExtras.includes('service_charge')
-              ? '1fr 1fr 1fr'
-              : '1fr 1fr',
+              ? (store.hideTax ? '1fr 1fr' : '1fr 1fr 1fr')
+              : (store.hideTax ? '1fr' : '1fr 1fr'),
             gap: 12,
           }}
         >
@@ -579,16 +627,18 @@ export function BillingPage() {
               />
             </div>
           ) : null}
-          <div>
-            <label className="field-label">Tax / GST %</label>
-            <input
-              className="input"
-              inputMode="decimal"
-              value={tax}
-              placeholder="0"
-              onChange={e => setTax(e.target.value)}
-            />
-          </div>
+          {!store.hideTax ? (
+            <div>
+              <label className="field-label">Tax / GST %</label>
+              <input
+                className="input"
+                inputMode="decimal"
+                value={tax}
+                placeholder="0"
+                onChange={e => setTax(e.target.value)}
+              />
+            </div>
+          ) : null}
         </div>
 
         {store.billExtras.includes('notes') ? (

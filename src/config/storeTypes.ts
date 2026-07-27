@@ -35,10 +35,13 @@ export type StoreTypeConfig = {
   blurb: string;
   itemLabel: string; // header for the item column
   qtyLabel: string; // header for the qty column
+  customerLabel?: string; // override "Customer" label (e.g. "Patient Name")
   lineFields: LineField[]; // extra inputs shown on every item row
   lineDiscount: boolean; // show a per-line discount % column
   billExtras: BillExtra[]; // bill-level extras beyond discount % + tax %
   expiryAlerts: boolean; // surface expiry reminders (medical)
+  hideTax?: boolean; // hide Tax / GST % field from billing form
+  medicalExtras?: boolean; // show patient address, doctor name, doctor address
 };
 
 export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {
@@ -58,16 +61,19 @@ export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {
     key: 'medical',
     label: 'Medical / Pharmacy',
     emoji: '💊',
-    blurb: 'Batch number, expiry date, and per-medicine discount.',
+    blurb: 'Patient & doctor info, batch number, expiry date.',
     itemLabel: 'Medicine',
     qtyLabel: 'Qty',
+    customerLabel: 'Patient Name',
     lineFields: [
       { key: 'batch_no', label: 'Batch no.', type: 'text', placeholder: 'B-1234' },
       { key: 'expiry_date', label: 'Expiry', type: 'date' },
     ],
-    lineDiscount: true,
+    lineDiscount: false,
     billExtras: [],
     expiryAlerts: true,
+    hideTax: true,
+    medicalExtras: true,
   },
   restaurant: {
     key: 'restaurant',
