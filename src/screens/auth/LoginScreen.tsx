@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { TextField } from '../../components/common/TextField';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
-import { colors, fontSize, spacing } from '../../theme';
+import { colors, fontSize, radius, spacing } from '../../theme';
 import { APP_NAME } from '../../config/constants';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -34,9 +34,10 @@ export function LoginScreen({ navigation }: Props) {
   return (
     <ScreenContainer scroll>
       <View style={styles.header}>
-        <Text style={styles.logo}>🧾</Text>
-        <Text style={styles.title}>{APP_NAME}</Text>
-        <Text style={styles.subtitle}>Log in to continue</Text>
+        <View style={styles.logoBox}>
+          <Image source={require('../../assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
+        </View>
+        <Text style={styles.subtitle}>Log in to your account to continue</Text>
       </View>
 
       <TextField
@@ -71,8 +72,19 @@ export function LoginScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   header: { alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.lg },
-  logo: { fontSize: 56 },
-  title: { fontSize: fontSize.xxl, fontWeight: '800', color: colors.text, marginTop: spacing.sm },
+  logoBox: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.xs,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  logoImage: { width: 200, height: 48 },
   subtitle: { fontSize: fontSize.md, color: colors.textMuted, marginTop: spacing.xs },
   error: { color: colors.danger, marginBottom: spacing.sm, textAlign: 'center' },
   secondary: { marginTop: spacing.sm },
