@@ -27,7 +27,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthShell title={APP_NAME} subtitle="Log in to continue">
+    <AuthShell title="Welcome Back" subtitle="Log in to your account to continue">
       <form onSubmit={handleLogin}>
         <TextField
           label="Email"

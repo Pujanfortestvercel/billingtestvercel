@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 // The app's display name. It's a placeholder for now and easy to change later.
-export const APP_NAME = 'BillingApp';
+export const APP_NAME = 'BusinessSathi';
 
 // New users get a free trial of this many days before they must subscribe.
 export const TRIAL_DAYS = 21;

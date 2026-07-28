@@ -127,7 +127,7 @@ export function DashboardScreen() {
         )}
         <View style={styles.brandText}>
           <Text style={styles.brandName} numberOfLines={1}>
-            {settings?.shop_name || 'BillingApp'}
+            {settings?.shop_name || 'BusinessSathi'}
           </Text>
           <Text style={styles.brandStore} numberOfLines={1}>
             {store.label}
