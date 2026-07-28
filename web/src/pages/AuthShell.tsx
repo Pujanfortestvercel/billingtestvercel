@@ -23,14 +23,13 @@ export function AuthShell({
       {/* Marketing hero panel (desktop layout) */}
       <div className="auth-hero">
         <div className="hero-logo-box">
-          <img src="/logo.png" alt={APP_NAME} style={{ width: '100%', maxHeight: 44, objectFit: 'contain' }} />
+          <img src="/logo.png" alt={APP_NAME} style={{ width: '100%', height: 'auto', maxHeight: 80, objectFit: 'contain' }} />
         </div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, margin: '12px 0 10px', letterSpacing: '-0.02em' }}>{APP_NAME}</h1>
-        <p style={{ fontSize: 17, opacity: 0.92, maxWidth: 440, lineHeight: 1.6, marginTop: 0 }}>
+        <p style={{ fontSize: 18, opacity: 0.95, maxWidth: 440, lineHeight: 1.6, marginTop: 24, fontWeight: 500 }}>
           Create invoices in seconds. Track customers, items, and your full
           billing history — from any device, anywhere.
         </p>
-        <ul style={{ marginTop: 20, lineHeight: 2.1, opacity: 0.95, fontSize: 15, paddingLeft: 20 }}>
+        <ul style={{ marginTop: 24, lineHeight: 2.2, opacity: 0.95, fontSize: 16, paddingLeft: 20 }}>
           <li>⚡ Fast item & customer autocomplete</li>
           <li>🖨️ Print or save invoices as PDF</li>
           <li>💬 Share bills on WhatsApp</li>
@@ -67,13 +66,13 @@ export function AuthShell({
         }
         .hero-logo-box {
           background: #ffffff;
-          padding: 10px 20px;
-          border-radius: 12px;
+          padding: 16px 28px;
+          border-radius: 16px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          max-width: 240px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+          max-width: 320px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
         }
         .auth-mobile-header {
           display: none;
@@ -87,20 +86,20 @@ export function AuthShell({
         }
         .auth-form-card {
           width: 100%;
-          max-width: 400px;
+          max-width: 420px;
           background: var(--surface);
           border: 1px solid var(--border);
           border-radius: var(--radius-lg);
-          padding: 36px 30px;
+          padding: 38px 32px;
           box-shadow: var(--shadow-md);
         }
         .auth-card-logo {
           display: block;
-          max-width: 220px;
+          max-width: 280px;
           width: 100%;
           height: auto;
-          max-height: 48px;
-          margin: 0 auto 18px;
+          max-height: 76px;
+          margin: 0 auto 20px;
           object-fit: contain;
         }
         .auth-form-header {
@@ -111,7 +110,7 @@ export function AuthShell({
         @media (max-width: 820px) {
           .auth-container {
             flex-direction: column;
-            background: linear-gradient(180deg, #0f2b5c 0%, #1d4ed8 200px, var(--bg) 200px);
+            background: linear-gradient(180deg, #0f2b5c 0%, #1d4ed8 220px, var(--bg) 220px);
           }
           .auth-hero {
             display: none !important;
@@ -121,25 +120,28 @@ export function AuthShell({
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 28px 20px 20px;
+            padding: 32px 20px 24px;
             color: #fff;
             text-align: center;
           }
           .auth-mobile-logo-box {
             background: #ffffff;
-            padding: 8px 18px;
-            border-radius: 10px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            padding: 12px 24px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
             display: inline-flex;
+            max-width: 280px;
+            width: 100%;
           }
           .auth-mobile-logo {
-            max-height: 44px;
-            max-width: 210px;
+            max-height: 64px;
+            max-width: 250px;
             width: 100%;
+            height: auto;
             object-fit: contain;
           }
           .auth-mobile-tagline {
-            margin: 10px 0 0;
+            margin: 12px 0 0;
             font-size: 13px;
             opacity: 0.92;
             font-weight: 500;
@@ -150,7 +152,7 @@ export function AuthShell({
           }
           .auth-form-card {
             box-shadow: var(--shadow-lg);
-            padding: 28px 22px;
+            padding: 30px 24px;
           }
         }
       `}</style>
