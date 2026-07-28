@@ -4,7 +4,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // into a native Android app. No changes to the React source are needed.
 const config: CapacitorConfig = {
   appId: 'com.billingapp.app',
-  appName: 'BillingApp',
+  appName: 'BusinessSathi',
   webDir: 'dist',
 };
 
