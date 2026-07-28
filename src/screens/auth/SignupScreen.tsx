@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  logoImage: { width: 200, height: 48 },
+  logoImage: { width: 240, height: 64 },
   subtitle: { fontSize: fontSize.md, color: colors.textMuted, marginTop: spacing.xs },
   pickLabel: {
     fontSize: fontSize.sm,
