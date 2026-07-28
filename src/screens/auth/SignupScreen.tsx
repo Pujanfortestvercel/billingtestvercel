@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
@@ -57,8 +57,9 @@ export function SignupScreen({ navigation }: Props) {
   return (
     <ScreenContainer scroll>
       <View style={styles.header}>
-        <Text style={styles.logo}>🧾</Text>
-        <Text style={styles.title}>Create your {APP_NAME}</Text>
+        <View style={styles.logoBox}>
+          <Image source={require('../../assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
+        </View>
         <Text style={styles.subtitle}>{TRIAL_DAYS} days free — no card needed</Text>
       </View>
 
@@ -119,8 +120,19 @@ export function SignupScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   header: { alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.lg },
-  logo: { fontSize: 56 },
-  title: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text, marginTop: spacing.sm },
+  logoBox: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.xs,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  logoImage: { width: 200, height: 48 },
   subtitle: { fontSize: fontSize.md, color: colors.textMuted, marginTop: spacing.xs },
   pickLabel: {
     fontSize: fontSize.sm,
