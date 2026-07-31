@@ -279,9 +279,22 @@ export async function updateBill(
 }
 
 // Delete one bill (its lines are removed automatically via the database's
-// "on delete cascade" rule).
+// "on delete cascade" rule). Only bills created within 7 days can be deleted.
 export async function deleteBill(billId: string): Promise<void> {
-  const { data: currentBill } = await supabase.from('bills').select('user_id').eq('id', billId).single();
+  const { data: currentBill } = await supabase
+    .from('bills')
+    .select('user_id, created_at')
+    .eq('id', billId)
+    .single();
+
+  if (currentBill?.created_at) {
+    const ageInMs = Date.now() - new Date(currentBill.created_at).getTime();
+    const maxAgeMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+    if (ageInMs > maxAgeMs) {
+      throw new Error('Bills older than 7 days cannot be deleted for accounting and audit compliance.');
+    }
+  }
+
   if (currentBill?.user_id) {
     const { error: rpcError } = await supabase.rpc('delete_bill_transaction', {
       p_bill_id: billId,
@@ -293,9 +306,14 @@ export async function deleteBill(billId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// Delete ALL of the user's bills.
+// Delete bills created within the last 7 days.
 export async function deleteAllBills(userId: string): Promise<void> {
-  const { error } = await supabase.from('bills').delete().eq('user_id', userId);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await supabase
+    .from('bills')
+    .delete()
+    .eq('user_id', userId)
+    .gte('created_at', sevenDaysAgo);
   if (error) throw new Error(error.message);
 }
 

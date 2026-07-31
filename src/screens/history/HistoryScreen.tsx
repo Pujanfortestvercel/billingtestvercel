@@ -145,9 +145,14 @@ export function HistoryScreen() {
     }
   }
 
+  function isDeletable(createdAt: string): boolean {
+    const ageMs = Date.now() - new Date(createdAt).getTime();
+    return ageMs <= 7 * 24 * 60 * 60 * 1000;
+  }
+
   function confirmDelete(bill: Bill) {
-    if (settings?.store_type === 'medical') {
-      Alert.alert('Cannot Delete', 'Government regulations for pharmacies require keeping all billing history for drug inspections.');
+    if (!isDeletable(bill.created_at)) {
+      Alert.alert('Cannot Delete', 'Bills older than 7 days cannot be deleted for accounting and audit compliance.');
       return;
     }
     Alert.alert('Delete bill', `Delete bill ${bill.bill_number}?`, [
@@ -168,20 +173,16 @@ export function HistoryScreen() {
   }
 
   function confirmDeleteAll() {
-    if (settings?.store_type === 'medical') {
-      Alert.alert('Cannot Delete', 'Government regulations for pharmacies require keeping all billing history for drug inspections.');
-      return;
-    }
     if (!user || bills.length === 0) return;
-    Alert.alert('Delete ALL bills', 'This permanently deletes every bill. Continue?', [
+    Alert.alert('Delete Recent Bills', 'This will delete bills created in the last 7 days. Bills older than 7 days will be preserved for audit compliance. Continue?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Delete all',
+        text: 'Delete recent',
         style: 'destructive',
         onPress: async () => {
           try {
             await deleteAllBills(user.id);
-            setBills([]);
+            setBills(prev => prev.filter(b => !isDeletable(b.created_at)));
           } catch (e: any) {
             Alert.alert('Error', e?.message ?? 'Could not delete.');
           }
@@ -195,6 +196,7 @@ export function HistoryScreen() {
       index === 0 || dayLabel(bills[index - 1].created_at) !== dayLabel(item.created_at);
     const expanded = expandedId === item.id;
     const items = itemsCache[item.id];
+    const deletable = isDeletable(item.created_at);
 
     return (
       <View>
@@ -232,9 +234,13 @@ export function HistoryScreen() {
                     <Button title="🖨️ Print" variant="ghost" onPress={() => doPrint(item)} style={styles.detailBtn} />
                     <Button title="📄 Save PDF" variant="ghost" onPress={() => doPdf(item)} style={styles.detailBtn} />
                     <Button title="💬 Share" variant="ghost" onPress={() => doShare(item)} style={styles.detailBtn} />
-                    {settings?.store_type !== 'medical' ? (
+                    {deletable ? (
                       <Button title="Delete" variant="danger" onPress={() => confirmDelete(item)} style={styles.detailBtn} />
-                    ) : null}
+                    ) : (
+                      <Text style={{ fontSize: fontSize.xs, color: colors.textMuted, fontStyle: 'italic', alignSelf: 'center', paddingHorizontal: spacing.xs }}>
+                        🔒 Locked (&gt; 7d)
+                      </Text>
+                    )}
                   </View>
                 </>
               )}

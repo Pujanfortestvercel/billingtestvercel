@@ -142,9 +142,14 @@ export function HistoryPage() {
     }
   }
 
+  function isDeletable(createdAt: string): boolean {
+    const ageMs = Date.now() - new Date(createdAt).getTime();
+    return ageMs <= 7 * 24 * 60 * 60 * 1000;
+  }
+
   async function remove(bill: Bill) {
-    if (isMedical) {
-      toast('Regulations require pharmacies to preserve all bill history.', 'error');
+    if (!isDeletable(bill.created_at)) {
+      toast('Bills older than 7 days cannot be deleted for accounting and audit compliance.', 'error');
       return;
     }
     if (!(await confirm('Delete bill', `Delete bill ${bill.bill_number}?`, { danger: true }))) return;
@@ -158,16 +163,12 @@ export function HistoryPage() {
   }
 
   async function removeAll() {
-    if (isMedical) {
-      toast('Regulations require pharmacies to preserve all bill history.', 'error');
-      return;
-    }
     if (!user || bills.length === 0) return;
-    if (!(await confirm('Delete ALL bills', 'This permanently deletes every bill. Continue?', { danger: true }))) return;
+    if (!(await confirm('Delete Recent Bills', 'This will delete bills created in the last 7 days. Bills older than 7 days will be preserved for audit compliance. Continue?', { danger: true }))) return;
     try {
       await deleteAllBills(user.id);
-      setBills([]);
-      toast('All bills deleted.', 'success');
+      setBills(prev => prev.filter(b => !isDeletable(b.created_at)));
+      toast('Bills within last 7 days deleted.', 'success');
     } catch (e: any) {
       toast(e?.message ?? 'Could not delete.', 'error');
     }
@@ -179,8 +180,8 @@ export function HistoryPage() {
     <div>
       <div className="row spread" style={{ marginBottom: 16 }}>
         <h1 style={{ margin: 0 }}>Bill History</h1>
-        {bills.length > 0 && !isMedical ? (
-          <Button title="Delete all" variant="danger" small onClick={removeAll} />
+        {bills.some(b => isDeletable(b.created_at)) ? (
+          <Button title="Delete recent (< 7d)" variant="danger" small onClick={removeAll} />
         ) : null}
       </div>
 
@@ -229,6 +230,7 @@ export function HistoryPage() {
               dayLabel(bills[index - 1].created_at) !== dayLabel(bill.created_at);
             const expanded = expandedId === bill.id;
             const items = itemsCache[bill.id];
+            const deletable = isDeletable(bill.created_at);
             return (
               <div key={bill.id}>
                 {showDay ? (
@@ -280,12 +282,18 @@ export function HistoryPage() {
                               </span>
                             </div>
                           ))}
-                          <div className="row gap-sm" style={{ flexWrap: 'wrap', marginTop: 12 }}>
+                          <div className="row gap-sm" style={{ flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
                             <Button title="Edit" variant="ghost" small onClick={() => navigate(`/billing?billId=${bill.id}`)} />
                             <Button title="🖨️ Print" variant="ghost" small loading={busy === `print:${bill.id}`} disabled={!!busy} onClick={() => doPrint(bill)} />
                             <Button title="📄 Download PDF" variant="ghost" small loading={busy === `pdf:${bill.id}`} disabled={!!busy} onClick={() => doPdf(bill)} />
                             <Button title="💬 Share" variant="ghost" small onClick={() => doShare(bill)} />
-                            <Button title="Delete" variant="danger" small onClick={() => remove(bill)} />
+                            {deletable ? (
+                              <Button title="Delete" variant="danger" small onClick={() => remove(bill)} />
+                            ) : (
+                              <span className="muted" style={{ fontSize: 12, fontStyle: 'italic', paddingLeft: 4 }}>
+                                🔒 Locked (&gt; 7d old)
+                              </span>
+                            )}
                           </div>
                         </>
                       )}
