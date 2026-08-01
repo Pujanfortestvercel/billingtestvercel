@@ -21,8 +21,8 @@
 
 import Config from 'react-native-config';
 
-export const SUPABASE_URL = Config.SUPABASE_URL ?? '';
-export const SUPABASE_ANON_KEY = Config.SUPABASE_ANON_KEY ?? '';
+export const SUPABASE_URL = Config.SUPABASE_URL || 'https://lmdhgqgzrkybkmtdfkus.supabase.co';
+export const SUPABASE_ANON_KEY = Config.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtZGhncWd6cmt5YmttdGRma3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1OTI1MTYsImV4cCI6MjEwMTE2ODUxNn0.zq7AnrbpbCpfTyYoSlyx3ORiWobxymL23bAKfZeCy4I';
 
 // True once you've added real values in your .env file. Until then, the app
 // shows a friendly "connect your Supabase project" screen instead of crashing.
