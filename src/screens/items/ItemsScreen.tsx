@@ -158,7 +158,7 @@ export function ItemsScreen() {
     setEditing(null);
     setNameInput('');
     setRateInput('');
-    setTrackInput(false);
+    setTrackInput(true);
     setReorderInput('');
     setCostInput('');
     setOpeningInput('');
@@ -255,7 +255,7 @@ export function ItemsScreen() {
         const stock = r.stock.trim() ? toNumber(r.stock) : 0;
         const reorder = r.reorder.trim() ? toNumber(r.reorder) : 0;
         const cost = r.cost.trim() ? toNumber(r.cost) : null;
-        const track = inventoryEnabled && (stock !== 0 || reorder !== 0 || cost != null);
+        const track = true;
         const created = await createItem(
           user.id,
           r.name,
