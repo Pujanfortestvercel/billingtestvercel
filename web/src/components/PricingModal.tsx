@@ -90,19 +90,16 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
 
     setSubmittingUtr(true);
     try {
-      // 1. Activate plan in Supabase
-      await activateUserSubscription(selectedPlan.key);
+      // Record payment submission in database for Admin Approval
+      const { error } = await supabase.from('subscriptions').update({
+        status: 'frozen', // Set status to pending/frozen until admin approves
+        plan: selectedPlan.key,
+        updated_at: new Date().toISOString(),
+      }).eq('user_id', user.id);
 
-      // 2. Record payment submission in payments table
-      await supabase.from('stock_movements').insert({
-        item_id: selectedPlan.key,
-        user_id: user.id,
-        change: selectedPlan.amount,
-        reason: 'opening',
-        note: `UPI Subscription UTR: ${utr} (${selectedPlan.title})`,
-      });
+      if (error) throw new Error(error.message);
 
-      toast(`🎉 Payment submitted! UTR: ${utr}. Subscription active!`, 'success');
+      toast(`⏳ Payment Submitted! UTR: ${utr}. Pending Admin Verification.`, 'success');
       setSubmittingUtr(false);
       setSelectedPlan(null);
       setUtrInput('');
@@ -110,7 +107,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
       onClose();
     } catch (e: any) {
       setSubmittingUtr(false);
-      toast(e?.message || 'Could not process subscription activation.', 'error');
+      toast(e?.message || 'Could not submit payment reference.', 'error');
     }
   }
 
