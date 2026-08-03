@@ -64,7 +64,7 @@ export const PRICING_PLANS = [
   },
 ];
 
-export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '919876543210' }: PricingModalProps) {
+export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '919324357300' }: PricingModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
