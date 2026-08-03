@@ -1,13 +1,12 @@
 // ---------------------------------------------------------------------------
-// PRICING & PAYMENT MODAL — Scrollable, 4 Equal-Feature Plans & UPI QR Scanner
+// PRICING & PAYMENT MODAL — 100% Automated Razorpay Payment Gateway (UPI / Cards / Netbanking)
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toast';
-import { Modal, Button, Card, TextField } from './UI';
-import { processRazorpayPayment, activateUserSubscription } from '../services/paymentService';
+import { Modal, Button } from './UI';
+import { processRazorpayPayment } from '../services/paymentService';
 import type { PlanKey } from '../services/subscriptionService';
-import { supabase } from '../lib/supabase';
 
 type PricingModalProps = {
   open: boolean;
@@ -67,51 +66,9 @@ export const PRICING_PLANS = [
 export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'razorpay'>('upi');
-  const [utrInput, setUtrInput] = useState('');
-  const [submittingUtr, setSubmittingUtr] = useState(false);
   const [loadingKey, setLoadingKey] = useState<PlanKey | null>(null);
 
-  const upiId = 'bharwada.k.pujan@okaxis';
-
-  function copyUpiId() {
-    navigator.clipboard.writeText(upiId);
-    toast('UPI ID copied to clipboard! 📋', 'success');
-  }
-
-  async function handleUpiSubmit() {
-    const utr = utrInput.trim();
-    if (!utr || utr.length < 6) {
-      toast('Please enter a valid 12-digit UTR / Reference number from your payment app.', 'error');
-      return;
-    }
-    if (!selectedPlan || !user) return;
-
-    setSubmittingUtr(true);
-    try {
-      // Record payment submission in database for Admin Approval
-      const { error } = await supabase.from('subscriptions').update({
-        status: 'frozen', // Set status to pending/frozen until admin approves
-        plan: selectedPlan.key,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', user.id);
-
-      if (error) throw new Error(error.message);
-
-      toast(`⏳ Payment Submitted! UTR: ${utr}. Pending Admin Verification.`, 'success');
-      setSubmittingUtr(false);
-      setSelectedPlan(null);
-      setUtrInput('');
-      if (onSuccess) onSuccess();
-      onClose();
-    } catch (e: any) {
-      setSubmittingUtr(false);
-      toast(e?.message || 'Could not submit payment reference.', 'error');
-    }
-  }
-
-  async function handleRazorpayPay(planKey: PlanKey) {
+  async function handleDirectRazorpayPay(planKey: PlanKey) {
     if (!user) return;
     setLoadingKey(planKey);
 
@@ -122,205 +79,96 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
         businessName: 'BusinessSathi Customer',
         onSuccess: (paymentId) => {
           setLoadingKey(null);
-          toast(`🎉 Payment Successful! (ID: ${paymentId}). Subscription Active!`, 'success');
-          setSelectedPlan(null);
+          toast(`🎉 Payment Verified! (ID: ${paymentId}). Subscription Active!`, 'success');
           if (onSuccess) onSuccess();
           onClose();
         },
         onError: (err) => {
           setLoadingKey(null);
-          toast(err || 'Payment cancelled.', 'error');
+          toast(err || 'Payment cancelled or failed.', 'error');
         },
       });
     } catch (e: any) {
       setLoadingKey(null);
-      toast(e?.message || 'Could not start payment.', 'error');
+      toast(e?.message || 'Could not start payment gateway.', 'error');
     }
   }
 
   if (!open) return null;
 
   return (
-    <Modal open={open} title={selectedPlan ? `💳 Pay for ${selectedPlan.title}` : "💳 Subscribe to BusinessSathi"} onClose={() => { setSelectedPlan(null); onClose(); }}>
+    <Modal open={open} title="💳 Select Subscription Plan" onClose={onClose}>
       <div style={{ maxHeight: '78vh', overflowY: 'auto', paddingRight: 4 }}>
-        {!selectedPlan ? (
-          <div>
-            <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
-              All plans include 100% of all features, 5-minute emergency walk-in support, and full inventory sync!
-            </p>
+        <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
+          100% Automated Payment via GPay, PhonePe, Paytm, Cards, or Netbanking. Subscription activates instantly upon payment!
+        </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
-              {PRICING_PLANS.map(p => (
-                <div
-                  key={p.key}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+          {PRICING_PLANS.map(p => (
+            <div
+              key={p.key}
+              style={{
+                border: p.popular ? '2px solid var(--primary)' : '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: 16,
+                background: p.popular ? 'var(--primary-soft)' : 'var(--surface)',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              {p.popular && (
+                <span
                   style={{
-                    border: p.popular ? '2px solid var(--primary)' : '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: 16,
-                    background: p.popular ? 'var(--primary-soft)' : 'var(--surface)',
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
+                    position: 'absolute',
+                    top: -12,
+                    right: 12,
+                    background: 'var(--primary)',
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '2px 10px',
+                    borderRadius: 12,
                   }}
                 >
-                  {p.popular && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: -12,
-                        right: 12,
-                        background: 'var(--primary)',
-                        color: '#fff',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: '2px 10px',
-                        borderRadius: 12,
-                      }}
-                    >
-                      RECOMMENDED
-                    </span>
-                  )}
+                  RECOMMENDED
+                </span>
+              )}
 
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 16 }}>{p.title}</div>
-                    <div style={{ fontSize: 26, fontWeight: 800, marginTop: 6, color: 'var(--primary)' }}>
-                      {p.price} <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 400 }}>{p.period}</span>
-                    </div>
-                    <span className="badge badge-success" style={{ marginTop: 6, display: 'inline-block' }}>
-                      {p.tag}
-                    </span>
-
-                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>
-                        INCLUDED IN THIS PLAN:
-                      </div>
-                      <ul style={{ paddingLeft: 16, margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--text)' }}>
-                        {EQUAL_FEATURES.map((f, i) => (
-                          <li key={i}>{f}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: 18 }}>
-                    <Button
-                      title={`Select ${p.title} (${p.price})`}
-                      variant={p.popular ? 'primary' : 'secondary'}
-                      block
-                      onClick={() => setSelectedPlan(p)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div>
-            {/* Plan Selected Header */}
-            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 'var(--radius-md)', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <strong style={{ fontSize: 16 }}>{selectedPlan.title} Plan</strong>
-                <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 20 }}>{selectedPlan.price}</div>
-              </div>
-              <Button title="← Change Plan" variant="ghost" small onClick={() => setSelectedPlan(null)} />
-            </div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{p.title}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, marginTop: 6, color: 'var(--primary)' }}>
+                  {p.price} <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 400 }}>{p.period}</span>
+                </div>
+                <span className="badge badge-success" style={{ marginTop: 6, display: 'inline-block' }}>
+                  {p.tag}
+                </span>
 
-            {/* Payment Method Selector Tabs */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-              <button
-                onClick={() => setPaymentMethod('upi')}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 'var(--radius-md)',
-                  border: `2px solid ${paymentMethod === 'upi' ? 'var(--primary)' : 'var(--border)'}`,
-                  background: paymentMethod === 'upi' ? 'var(--primary-soft)' : 'var(--surface)',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                📲 Direct UPI QR (0% Fees)
-              </button>
-              <button
-                onClick={() => setPaymentMethod('razorpay')}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 'var(--radius-md)',
-                  border: `2px solid ${paymentMethod === 'razorpay' ? 'var(--primary)' : 'var(--border)'}`,
-                  background: paymentMethod === 'razorpay' ? 'var(--primary-soft)' : 'var(--surface)',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                💳 Razorpay (Card/Netbank)
-              </button>
-            </div>
-
-            {paymentMethod === 'upi' ? (
-              <div style={{ textAlign: 'center' }}>
-                <Card style={{ padding: 16, display: 'inline-block', maxWidth: 320, width: '100%' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>
-                    Scan with GPay / PhonePe / Paytm
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>
+                    INCLUDED IN THIS PLAN:
                   </div>
-
-                  {/* User's Exact Scanner QR Code Image */}
-                  <img
-                    src="/upi_qr_scanner.png"
-                    alt="UPI QR Scanner"
-                    style={{ width: '100%', maxWidth: 240, height: 'auto', borderRadius: 8, border: '1px solid var(--border)' }}
-                  />
-
-                  <div style={{ marginTop: 12, fontSize: 13, background: 'var(--surface-2)', padding: '8px 12px', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 700, wordBreak: 'break-all' }}>{upiId}</span>
-                    <button className="btn btn-ghost btn-sm" onClick={copyUpiId} style={{ padding: '2px 8px' }}>
-                      📋 Copy
-                    </button>
-                  </div>
-
-                  <a
-                    href={`upi://pay?pa=${upiId}&pn=BusinessSathi&am=${selectedPlan.amount}&cu=INR`}
-                    className="btn btn-primary"
-                    style={{ width: '100%', marginTop: 12, textDecoration: 'none', display: 'block', textAlign: 'center' }}
-                  >
-                    🚀 Open GPay / PhonePe App
-                  </a>
-                </Card>
-
-                {/* UTR Verification Step */}
-                <div style={{ marginTop: 16, textAlign: 'left' }}>
-                  <TextField
-                    label="Enter Payment UTR / Ref No. (12 digits)"
-                    value={utrInput}
-                    onChange={e => setUtrInput(e.target.value)}
-                    placeholder="e.g. 421983019284"
-                  />
-                  <Button
-                    title="✅ Submit UTR & Activate Plan"
-                    variant="primary"
-                    block
-                    loading={submittingUtr}
-                    onClick={handleUpiSubmit}
-                  />
+                  <ul style={{ paddingLeft: 16, margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--text)' }}>
+                    {EQUAL_FEATURES.map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-            ) : (
-              <div style={{ padding: '20px 0', textAlign: 'center' }}>
-                <p className="muted">
-                  Click below to open Razorpay Secure Checkout for Credit/Debit Cards, Netbanking, or Wallet payment.
-                </p>
+
+              <div style={{ marginTop: 18 }}>
                 <Button
-                  title={loadingKey === selectedPlan.key ? 'Opening Razorpay...' : `Pay ${selectedPlan.price} via Razorpay`}
-                  variant="primary"
+                  title={loadingKey === p.key ? 'Opening Gateway...' : `Pay ${p.price} via GPay / Card`}
+                  variant={p.popular ? 'primary' : 'secondary'}
                   block
                   disabled={loadingKey !== null}
-                  onClick={() => handleRazorpayPay(selectedPlan.key)}
+                  onClick={() => handleDirectRazorpayPay(p.key)}
                 />
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
     </Modal>
   );
