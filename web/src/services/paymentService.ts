@@ -43,10 +43,10 @@ export async function processRazorpayPayment(options: CheckoutOptions): Promise<
 
   // Plan pricing lookup (in INR)
   const planPrices: Record<string, number> = {
-    '1m': 799,
-    '3m': 2199,
-    '6m': 3999,
-    '1y': 7999,
+    '1m': 800,
+    '3m': 2400,
+    '6m': 4800,
+    '1y': 9600,
   };
 
   const amountInRupees = planPrices[options.planKey] || 799;

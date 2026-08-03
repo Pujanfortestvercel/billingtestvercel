@@ -225,19 +225,19 @@ export function SettingsPage() {
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
           <div style={{ padding: 10, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>1 Month</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹799</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹800</div>
           </div>
           <div style={{ padding: 10, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>3 Months</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹2,199</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹2,400</div>
           </div>
           <div style={{ padding: 10, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>6 Months</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹3,999</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹4,800</div>
           </div>
           <div style={{ padding: 10, background: 'var(--primary-soft)', border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
             <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700 }}>1 Year ⭐</div>
-            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)' }}>₹7,999</div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)' }}>₹9,600</div>
           </div>
         </div>
       </Card>
