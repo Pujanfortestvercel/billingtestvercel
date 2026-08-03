@@ -18,6 +18,8 @@ import { listLowStock } from '../services/inventoryService';
 import type { Item } from '../types/models';
 import { formatCurrency, formatDateTime } from '../utils/format';
 
+import { PricingModal } from '../components/PricingModal';
+
 export function DashboardPage() {
   const { user } = useAuth();
   const { status, daysLeft, loading: subLoading, inventoryEnabled } = useSubscription();
@@ -27,6 +29,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [expiring, setExpiring] = useState<ExpiringLine[]>([]);
   const [lowStock, setLowStock] = useState<Item[]>([]);
+  const [pricingOpen, setPricingOpen] = useState(false);
 
 
 
@@ -88,8 +91,9 @@ export function DashboardPage() {
                 : 'Expired — please contact admin to renew'}
             </div>
           </div>
-          <div className="row gap-sm" style={{ alignItems: 'center' }}>
-            <Button title="🧾 Create new bill" onClick={() => navigate('/billing')} />
+          <div className="row gap-sm" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button title="💳 Subscribe Now" variant="primary" onClick={() => setPricingOpen(true)} />
+            <Button title="🧾 Create new bill" variant="secondary" onClick={() => navigate('/billing')} />
           </div>
         </div>
       </Card>
@@ -294,11 +298,10 @@ export function DashboardPage() {
         <Card>Could not load dashboard data.</Card>
       )}
 
-      <style>{`
-        @media (max-width: 760px) {
-          .dash-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+      <PricingModal
+        open={pricingOpen}
+        onClose={() => setPricingOpen(false)}
+      />
     </div>
   );
 }
