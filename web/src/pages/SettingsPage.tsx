@@ -35,8 +35,12 @@ function fileToLogoDataUrl(file: File): Promise<string> {
   });
 }
 
+import { useSubscription } from '../context/SubscriptionContext';
+import { PricingModal } from '../components/PricingModal';
+
 export function SettingsPage() {
   const { settings, store, loading, save } = useSettings();
+  const { status: subStatus, daysLeft } = useSubscription();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +50,7 @@ export function SettingsPage() {
   const [address, setAddress] = useState('');
   const [logo, setLogo] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
 
   useEffect(() => {
     if (!settings) return;
@@ -200,10 +205,56 @@ export function SettingsPage() {
         </div>
       </Card>
 
+      {/* Subscription & Billing */}
+      <Card style={{ marginBottom: 16 }}>
+        <div className="row spread" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h3 style={{ marginTop: 0, marginBottom: 4 }}>💳 Subscription & Billing</h3>
+            <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+              Status: <strong style={{ color: 'var(--success)' }}>{subStatus === 'active' ? 'Active' : subStatus === 'trial' ? 'Trial' : subStatus}</strong>
+              {daysLeft > 0 ? ` · ${daysLeft} days remaining` : ''}
+            </p>
+          </div>
+          <Button
+            title="💳 Upgrade / Renew Plan"
+            variant="primary"
+            onClick={() => setPricingOpen(true)}
+          />
+        </div>
+
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+          <div style={{ padding: 10, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>1 Month</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹799</div>
+          </div>
+          <div style={{ padding: 10, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>3 Months</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹2,199</div>
+          </div>
+          <div style={{ padding: 10, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>6 Months</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>₹3,999</div>
+          </div>
+          <div style={{ padding: 10, background: 'var(--primary-soft)', border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700 }}>1 Year ⭐</div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)' }}>₹7,999</div>
+          </div>
+        </div>
+      </Card>
+
       <Button title="Save settings" loading={saving} onClick={onSave} />
       <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
         Current store type: <strong>{store.label}</strong> · App Version: <strong>v1.0.0</strong>
       </p>
+
+      <PricingModal
+        open={pricingOpen}
+        onClose={() => setPricingOpen(false)}
+        onSuccess={() => {
+          setPricingOpen(false);
+          toast('Subscription activated successfully! 🎉', 'success');
+        }}
+      />
     </div>
   );
 }
