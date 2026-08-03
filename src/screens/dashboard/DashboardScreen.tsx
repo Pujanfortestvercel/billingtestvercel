@@ -157,11 +157,22 @@ export function DashboardScreen() {
         >
           {subLine}
         </Text>
-        <Button
-          title="🧾  Create new bill"
-          onPress={() => navigation.navigate('Billing')}
-          style={styles.newBill}
-        />
+        <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+          <Button
+            title="💳 Subscribe Now"
+            onPress={() => {
+              const msg = encodeURIComponent(`Hii I want to subscribe to BusinessSathi. My email is ${user?.email || ''}`);
+              Linking.openURL(`https://wa.me/919324357300?text=${msg}`);
+            }}
+            style={{ flex: 1 }}
+          />
+          <Button
+            title="🧾 Create bill"
+            variant="secondary"
+            onPress={() => navigation.navigate('Billing')}
+            style={{ flex: 1 }}
+          />
+        </View>
       </Card>
 
       {/* Expiry reminders (medical stores) */}
