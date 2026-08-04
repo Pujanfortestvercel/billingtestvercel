@@ -22,10 +22,10 @@
 
 export const SUPABASE_URL =
   (import.meta as any).env?.VITE_SUPABASE_URL ||
-  'https://lmdhgqgzrkybkmtdfkus.supabase.co';
+  'https://yeijmqntdditskhptgbl.supabase.co';
 export const SUPABASE_ANON_KEY =
   (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtZGhncWd6cmt5YmttdGRma3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1OTI1MTYsImV4cCI6MjEwMTE2ODUxNn0.zq7AnrbpbCpfTyYoSlyx3ORiWobxymL23bAKfZeCy4I';
+  'sb_publishable_PU19hw0CGh8nHlaa8NX8rg_VtNirLQU';
 
 // True once you've added real values in your .env file. Until then, the app
 // shows a friendly "connect your Supabase project" screen instead of crashing.
