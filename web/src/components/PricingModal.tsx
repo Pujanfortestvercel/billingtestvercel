@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// PRICING & PAYMENT MODAL — Direct GPay QR Code + Automated WhatsApp Payment Proof
+// DIRECT GPAY UPI PAYMENT GATEWAY (0 PAN Card, 0 Gateway Fees)
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +12,6 @@ type PricingModalProps = {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  whatsappNumber?: string; // e.g. "919876543210"
 };
 
 export const EQUAL_FEATURES = [
@@ -64,53 +63,65 @@ export const PRICING_PLANS = [
   },
 ];
 
-export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '919324357300' }: PricingModalProps) {
+export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [activating, setActivating] = useState(false);
 
   const upiId = 'bharwada.k.pujan@okaxis';
+  const whatsappNumber = '919324357300';
 
   function copyUpiId() {
     navigator.clipboard.writeText(upiId);
     toast('UPI ID copied to clipboard! 📋', 'success');
   }
 
-  async function handlePaidClick() {
+  async function handleActivateSubscription() {
     if (!selectedPlan || !user) return;
 
-    setSubmitting(true);
+    setActivating(true);
     try {
-      // 1. Set subscription status to frozen (pending admin verification)
-      await supabase.from('subscriptions').upsert({
-        user_id: user.id,
-        status: 'frozen',
-        plan: selectedPlan.key,
-        updated_at: new Date().toISOString(),
-      });
+      const now = new Date();
+      let days = 30;
+      if (selectedPlan.key === '3m') days = 90;
+      if (selectedPlan.key === '6m') days = 180;
+      if (selectedPlan.key === '1y') days = 365;
 
-      // 2. Auto-format WhatsApp message
+      const endDate = new Date(now.getTime() + days * 86400000);
+
+      // 1. Activate subscription in Supabase database
+      const { error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          status: 'active',
+          plan: selectedPlan.key,
+          trial_start: now.toISOString(),
+          trial_end: endDate.toISOString(),
+          inventory_enabled: true,
+          updated_at: now.toISOString(),
+        });
+
+      if (error) throw new Error(error.message);
+
+      // 2. Optional: Notify admin via WhatsApp link
       const userEmail = user.email || 'No Email';
-      const messageText = `Hii I have paid ${selectedPlan.price} for ${selectedPlan.title} subscription. My email is ${userEmail}`;
-      const encodedMsg = encodeURIComponent(messageText);
+      const msg = `🎉 Payment Completed! ${selectedPlan.price} paid for ${selectedPlan.title} subscription. User: ${userEmail}`;
+      const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
 
-      // Clean phone number format for WhatsApp link
-      const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+      toast(`🎉 Payment Confirmed! ${selectedPlan.title} Subscription Active!`, 'success');
+      setActivating(false);
 
-      toast('🎉 Payment confirmation sent! Opening WhatsApp...', 'success');
-      setSubmitting(false);
-
-      // 3. Open WhatsApp pre-filled chat in new window/tab
+      // Open WhatsApp notification in background window
       window.open(waUrl, '_blank');
 
       setSelectedPlan(null);
       if (onSuccess) onSuccess();
       onClose();
     } catch (e: any) {
-      setSubmitting(false);
-      toast(e?.message || 'Could not send payment notification.', 'error');
+      setActivating(false);
+      toast(e?.message || 'Could not activate subscription.', 'error');
     }
   }
 
@@ -122,7 +133,7 @@ export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '91932
         {!selectedPlan ? (
           <div>
             <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
-              All plans include 100% of all features, 5-minute emergency walk-in support, and full inventory sync!
+              Choose a plan. Pay via GPay, PhonePe, Paytm, or UPI scanner. 0% extra fees!
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
@@ -181,7 +192,7 @@ export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '91932
 
                   <div style={{ marginTop: 18 }}>
                     <Button
-                      title={`Select ${p.title} (${p.price})`}
+                      title={`Subscribe for ${p.price}`}
                       variant={p.popular ? 'primary' : 'secondary'}
                       block
                       onClick={() => setSelectedPlan(p)}
@@ -193,7 +204,7 @@ export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '91932
           </div>
         ) : (
           <div>
-            {/* Plan Selected Header */}
+            {/* Selected Plan Summary */}
             <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 'var(--radius-md)', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <strong style={{ fontSize: 16 }}>{selectedPlan.title} Plan</strong>
@@ -202,17 +213,17 @@ export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '91932
               <Button title="← Change Plan" variant="ghost" small onClick={() => setSelectedPlan(null)} />
             </div>
 
-            {/* QR Scanner Display */}
+            {/* Direct GPay QR Gateway Card */}
             <div style={{ textAlign: 'center' }}>
               <Card style={{ padding: 16, display: 'inline-block', maxWidth: 320, width: '100%' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>
-                  Scan with GPay / PhonePe / Paytm
+                  Scan & Pay with GPay / PhonePe / Paytm
                 </div>
 
-                {/* GPay QR Scanner Image */}
+                {/* Google Pay QR Code Image */}
                 <img
                   src="/upi_qr_scanner.png"
-                  alt="UPI QR Scanner"
+                  alt="GPay QR Code"
                   style={{ width: '100%', maxWidth: 240, height: 'auto', borderRadius: 8, border: '1px solid var(--border)' }}
                 />
 
@@ -223,26 +234,27 @@ export function PricingModal({ open, onClose, onSuccess, whatsappNumber = '91932
                   </button>
                 </div>
 
+                {/* 1-Tap Open GPay Link */}
                 <a
                   href={`upi://pay?pa=${upiId}&pn=BusinessSathi&am=${selectedPlan.amount}&cu=INR`}
-                  className="btn btn-secondary"
-                  style={{ width: '100%', marginTop: 12, textDecoration: 'none', display: 'block', textAlign: 'center' }}
+                  className="btn btn-primary"
+                  style={{ width: '100%', marginTop: 12, textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: 700 }}
                 >
-                  🚀 Open GPay / PhonePe App
+                  🚀 Pay {selectedPlan.price} via GPay App
                 </a>
               </Card>
 
-              {/* The "I Have Paid" WhatsApp Action Button */}
+              {/* 1-Tap Subscription Activation Button */}
               <div style={{ marginTop: 20 }}>
                 <Button
-                  title="✅ I Have Paid (Send Payment Proof on WhatsApp)"
+                  title={`✅ I Have Transferred ${selectedPlan.price} (Activate Plan)`}
                   variant="primary"
                   block
-                  loading={submitting}
-                  onClick={handlePaidClick}
+                  loading={activating}
+                  onClick={handleActivateSubscription}
                 />
                 <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-                  Clicking "I Have Paid" will open WhatsApp with your pre-typed email and plan details to confirm your payment.
+                  After completing payment on GPay/PhonePe, tap above to unlock your {selectedPlan.title} subscription instantly.
                 </p>
               </div>
             </div>
