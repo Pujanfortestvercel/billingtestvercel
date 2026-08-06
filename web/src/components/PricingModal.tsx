@@ -76,7 +76,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
     toast('UPI ID copied to clipboard! 📋', 'success');
   }
 
-  // When a plan is selected, create OneAPI dynamic order
+  // When a plan is selected, create OneAPI order
   async function handleSelectPlan(plan: typeof PRICING_PLANS[0]) {
     setSelectedPlan(plan);
     setLoadingOrder(true);
@@ -107,7 +107,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
     return () => clearInterval(interval);
   }, [selectedPlan, order, open]);
 
-  // Activate subscription upon payment confirmation
+  // Activate subscription upon payment confirmation (NO WhatsApp redirect)
   async function handleConfirmPayment() {
     if (!selectedPlan || !user || !order) return;
 
@@ -115,14 +115,8 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
     try {
       await activateUserSubscription(selectedPlan.key, order.orderId);
 
-      const userEmail = user.email || 'No Email';
-      const msg = `Hii! I have completed payment of ${selectedPlan.price} for ${selectedPlan.title} subscription on BusinessSathi.\n\nUser: ${userEmail}\nOrder ID: ${order.orderId}`;
-      const waUrl = `https://wa.me/919324357300?text=${encodeURIComponent(msg)}`;
-
       toast(`🎉 Payment Confirmed! ${selectedPlan.title} Subscription Active!`, 'success');
       setActivating(false);
-
-      window.open(waUrl, '_blank');
 
       setSelectedPlan(null);
       setOrder(null);
@@ -222,7 +216,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
               <Button title="← Change Plan" variant="ghost" small onClick={() => { setSelectedPlan(null); setOrder(null); }} />
             </div>
 
-            {/* OneAPI Gateway Checkout Card */}
+            {/* Gateway Checkout Card */}
             <div style={{ textAlign: 'center' }}>
               <Card style={{ padding: 16, display: 'inline-block', maxWidth: 340, width: '100%' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, color: 'var(--text-muted)' }}>
@@ -261,17 +255,17 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                 )}
               </Card>
 
-              {/* OneAPI Real-Time Verification Status */}
+              {/* Real-Time Verification Status */}
               <div style={{ marginTop: 16, background: 'var(--surface-2)', padding: 14, borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>
-                  <Spinner /> ⌛ Waiting for OneAPI Payment Verification...
+                  <Spinner /> ⌛ Waiting for Payment Verification...
                 </div>
                 <p className="muted" style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
-                  Screen auto-updates to <strong>Subscription Active</strong> the instant your UPI payment completes!
+                  Screen auto-updates to <strong>Subscription Active</strong> the instant your payment completes!
                 </p>
               </div>
 
-              {/* 1-Tap Confirm Payment Button */}
+              {/* Pure Verification Confirmation Button */}
               <div style={{ marginTop: 14 }}>
                 <Button
                   title={`✅ Confirm Payment of ${selectedPlan.price}`}
