@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
-// PRICING MODAL — 100% Automated Bank SMS Payment Verification Gateway
+// PRICING & SUBSCRIPTION PAYMENT MODAL
 // ---------------------------------------------------------------------------
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toast';
-import { Modal, Button, Card, Spinner } from './UI';
+import { Modal, Button, Card } from './UI';
 import type { PlanKey } from '../services/subscriptionService';
-import { createPendingOrder, checkOrderVerified } from '../services/smsWebhookService';
+import { supabase } from '../lib/supabase';
 
 type PricingModalProps = {
   open: boolean;
@@ -67,56 +67,72 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
-  const [orderRef, setOrderRef] = useState<string | null>(null);
-  const [loadingOrder, setLoadingOrder] = useState(false);
+  const [activating, setActivating] = useState(false);
 
   const upiId = 'bharwada.k.pujan@okaxis';
+  const whatsappNumber = '919324357300';
 
   function copyUpiId() {
     navigator.clipboard.writeText(upiId);
     toast('UPI ID copied to clipboard! 📋', 'success');
   }
 
-  // When a plan is selected, create pending order and start live polling
-  async function handleSelectPlan(plan: typeof PRICING_PLANS[0]) {
-    setSelectedPlan(plan);
-    setLoadingOrder(true);
+  async function handleConfirmPaid() {
+    if (!selectedPlan || !user) return;
+
+    setActivating(true);
     try {
-      const ref = await createPendingOrder(plan.key, plan.amount);
-      setOrderRef(ref);
-    } catch {
-      setOrderRef(Math.floor(1000 + Math.random() * 9000).toString());
-    } finally {
-      setLoadingOrder(false);
+      const now = new Date();
+      let days = 30;
+      if (selectedPlan.key === '3m') days = 90;
+      if (selectedPlan.key === '6m') days = 180;
+      if (selectedPlan.key === '1y') days = 365;
+
+      const endDate = new Date(now.getTime() + days * 86400000);
+
+      // Save frozen/pending activation for admin review or active
+      const { error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          status: 'active',
+          plan: selectedPlan.key,
+          trial_start: now.toISOString(),
+          trial_end: endDate.toISOString(),
+          inventory_enabled: true,
+          updated_at: now.toISOString(),
+        });
+
+      if (error) throw new Error(error.message);
+
+      const userEmail = user.email || 'No Email';
+      const msg = `Hii! I have paid ${selectedPlan.price} for ${selectedPlan.title} subscription on BusinessSathi.\n\nUser Email: ${userEmail}\nPlan: ${selectedPlan.title} (${selectedPlan.price})\nUPI: ${upiId}`;
+      const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
+
+      toast(`🎉 Payment Submitted! ${selectedPlan.title} Subscription Active!`, 'success');
+      setActivating(false);
+
+      // Open WhatsApp pre-filled proof message
+      window.open(waUrl, '_blank');
+
+      setSelectedPlan(null);
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (e: any) {
+      setActivating(false);
+      toast(e?.message || 'Could not process subscription.', 'error');
     }
   }
-
-  // Live 3-second polling — ONLY activates when Bank SMS Webhook is received!
-  useEffect(() => {
-    if (!selectedPlan || !orderRef || !open) return;
-
-    const interval = setInterval(async () => {
-      const isVerified = await checkOrderVerified(orderRef);
-      if (isVerified) {
-        clearInterval(interval);
-        toast(`🎉 Payment Verified by Bank SMS! ${selectedPlan.title} Active!`, 'success');
-        if (onSuccess) onSuccess();
-        onClose();
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [selectedPlan, orderRef, open]);
 
   if (!open) return null;
 
   return (
-    <Modal open={open} title={selectedPlan ? `💳 Pay for ${selectedPlan.title}` : "💳 Subscribe to BusinessSathi"} onClose={() => { setSelectedPlan(null); setOrderRef(null); onClose(); }}>
+    <Modal open={open} title={selectedPlan ? `💳 Pay for ${selectedPlan.title}` : "💳 Subscribe to BusinessSathi"} onClose={() => { setSelectedPlan(null); onClose(); }}>
       <div style={{ maxHeight: '78vh', overflowY: 'auto', paddingRight: 4 }}>
         {!selectedPlan ? (
           <div>
             <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
-              Choose a plan. Automatic Bank SMS verification — 0% transaction fees!
+              Choose a plan. Pay via GPay, PhonePe, Paytm, or any UPI scanner. 0% extra fees!
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
@@ -178,7 +194,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                       title={`Subscribe for ${p.price}`}
                       variant={p.popular ? 'primary' : 'secondary'}
                       block
-                      onClick={() => handleSelectPlan(p)}
+                      onClick={() => setSelectedPlan(p)}
                     />
                   </div>
                 </div>
@@ -193,21 +209,15 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                 <strong style={{ fontSize: 16 }}>{selectedPlan.title} Plan</strong>
                 <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 20 }}>{selectedPlan.price}</div>
               </div>
-              <Button title="← Change Plan" variant="ghost" small onClick={() => { setSelectedPlan(null); setOrderRef(null); }} />
+              <Button title="← Change Plan" variant="ghost" small onClick={() => setSelectedPlan(null)} />
             </div>
 
             {/* Direct GPay QR Gateway Card */}
             <div style={{ textAlign: 'center' }}>
               <Card style={{ padding: 16, display: 'inline-block', maxWidth: 340, width: '100%' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>
                   Scan & Pay with GPay / PhonePe / Paytm / BHIM
                 </div>
-
-                {orderRef && (
-                  <div style={{ background: 'var(--primary-soft)', border: '1px solid var(--primary)', padding: '6px 10px', borderRadius: 6, marginBottom: 10, fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
-                    Add Note in UPI App: <span style={{ fontSize: 15, fontWeight: 800 }}>REF {orderRef}</span>
-                  </div>
-                )}
 
                 {/* Google Pay QR Code Image */}
                 <img
@@ -223,37 +233,28 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                   </button>
                 </div>
 
-                {/* 1-Tap Open UPI Link */}
+                {/* 1-Tap Open GPay / PhonePe App */}
                 <a
-                  href={`upi://pay?pa=${upiId}&pn=BusinessSathi&am=${selectedPlan.amount}&tn=REF%20${orderRef || ''}&cu=INR`}
+                  href={`upi://pay?pa=${upiId}&pn=BusinessSathi&am=${selectedPlan.amount}&cu=INR`}
                   className="btn btn-primary"
                   style={{ width: '100%', marginTop: 12, textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: 700 }}
                 >
-                  🚀 Pay {selectedPlan.price} via Any UPI App (GPay / PhonePe / Paytm)
+                  🚀 Pay {selectedPlan.price} via Any UPI App
                 </a>
               </Card>
 
-              {/* Live Automated Verification Indicator */}
-              <div style={{ marginTop: 16, background: 'var(--surface-2)', padding: 16, borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>
-                  <Spinner /> ⌛ Waiting for Bank SMS Verification...
-                </div>
-                <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 0 }}>
-                  Screen auto-updates to <strong>Subscription Active</strong> the instant your bank SMS arrives!
+              {/* 1-Tap Confirm Payment & Open WhatsApp */}
+              <div style={{ marginTop: 18 }}>
+                <Button
+                  title={`✅ I Have Paid ${selectedPlan.price} (Send Proof on WhatsApp)`}
+                  variant="primary"
+                  block
+                  loading={activating}
+                  onClick={handleConfirmPaid}
+                />
+                <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+                  After transferring on GPay/PhonePe, tap above to notify admin on WhatsApp (+91 93243 57300) and unlock your plan!
                 </p>
-              </div>
-
-              {/* 1-Tap Send Payment Proof on WhatsApp */}
-              <div style={{ marginTop: 14 }}>
-                <a
-                  href={`https://wa.me/919324357300?text=${encodeURIComponent(`Hii! I have paid ${selectedPlan.price} for ${selectedPlan.title} subscription. User: ${user?.email || 'No Email'} (Ref: ${orderRef || ''})`)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-secondary"
-                  style={{ width: '100%', textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: 700 }}
-                >
-                  💬 I Have Paid (Send Proof on WhatsApp)
-                </a>
               </div>
             </div>
           </div>
