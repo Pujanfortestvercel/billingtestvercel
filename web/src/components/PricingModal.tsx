@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toast';
 import { Modal, Button, Card, Spinner } from './UI';
 import type { PlanKey } from '../services/subscriptionService';
-import { supabase } from '../lib/supabase';
 import { createPendingOrder, checkOrderVerified } from '../services/smsWebhookService';
 
 type PricingModalProps = {
@@ -70,7 +69,6 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
   const [orderRef, setOrderRef] = useState<string | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
-  const [activating, setActivating] = useState(false);
 
   const upiId = 'bharwada.k.pujan@okaxis';
 
@@ -93,7 +91,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
     }
   }
 
-  // Live 3-second polling to auto-detect Bank SMS payment
+  // Live 3-second polling — ONLY activates when Bank SMS Webhook is received!
   useEffect(() => {
     if (!selectedPlan || !orderRef || !open) return;
 
@@ -109,45 +107,6 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
 
     return () => clearInterval(interval);
   }, [selectedPlan, orderRef, open]);
-
-  // Fallback instant activation button
-  async function handleManualActivate() {
-    if (!selectedPlan || !user) return;
-
-    setActivating(true);
-    try {
-      const now = new Date();
-      let days = 30;
-      if (selectedPlan.key === '3m') days = 90;
-      if (selectedPlan.key === '6m') days = 180;
-      if (selectedPlan.key === '1y') days = 365;
-
-      const endDate = new Date(now.getTime() + days * 86400000);
-
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          status: 'active',
-          plan: selectedPlan.key,
-          trial_start: now.toISOString(),
-          trial_end: endDate.toISOString(),
-          inventory_enabled: true,
-          updated_at: now.toISOString(),
-        });
-
-      if (error) throw new Error(error.message);
-
-      toast(`🎉 Subscription Activated! ${selectedPlan.title} Plan Active!`, 'success');
-      setActivating(false);
-      setSelectedPlan(null);
-      if (onSuccess) onSuccess();
-      onClose();
-    } catch (e: any) {
-      setActivating(false);
-      toast(e?.message || 'Could not activate subscription.', 'error');
-    }
-  }
 
   if (!open) return null;
 
@@ -275,24 +234,13 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
               </Card>
 
               {/* Live Automated Verification Indicator */}
-              <div style={{ marginTop: 16, background: 'var(--surface-2)', padding: 14, borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+              <div style={{ marginTop: 16, background: 'var(--surface-2)', padding: 16, borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>
-                  <Spinner /> ⌛ Auto-Detecting Bank SMS Payment...
+                  <Spinner /> ⌛ Waiting for Bank SMS Verification...
                 </div>
-                <p className="muted" style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
-                  Once your GPay payment is sent, our Bank SMS listener verifies it in 5 seconds and activates your account!
+                <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 0 }}>
+                  Screen auto-updates to <strong>Subscription Active</strong> the instant your bank SMS arrives!
                 </p>
-              </div>
-
-              {/* Instant Activation Button */}
-              <div style={{ marginTop: 14 }}>
-                <Button
-                  title={`✅ Instant Activation (Done Payment)`}
-                  variant="secondary"
-                  block
-                  loading={activating}
-                  onClick={handleManualActivate}
-                />
               </div>
             </div>
           </div>
