@@ -301,6 +301,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                       setOrder(null);
                       if (onSuccess) onSuccess();
                       onClose();
+                      setTimeout(() => window.location.reload(), 800);
                     } catch (e: any) {
                       setActivating(false);
                       toast(e?.message || 'Could not activate subscription.', 'error');
