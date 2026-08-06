@@ -45,9 +45,25 @@ export async function createOneApiOrder(planKey: PlanKey, amount: number): Promi
   };
 }
 
-// Check OneAPI Payment Status
+// Check OneAPI Payment Status via API
 export async function checkOneApiPaymentVerified(orderId: string): Promise<boolean> {
   if (!orderId) return false;
+  try {
+    const res = await fetch(`https://oneapi.in/api/v1/check_status?order_id=${orderId}`, {
+      headers: {
+        'X-API-KEY': ONEAPI_KEY,
+        'Authorization': `Bearer ${ONEAPI_KEY}`,
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.success === true) {
+        return true;
+      }
+    }
+  } catch {
+    // If pending or API check error
+  }
   return false;
 }
 
