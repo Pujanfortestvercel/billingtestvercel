@@ -45,18 +45,17 @@ export async function createPendingOrder(planKey: PlanKey, amount: number): Prom
   return orderRef;
 }
 
-// Check if subscription was verified by Bank SMS
+// Check if specific Order Ref was completed by Bank SMS Webhook
 export async function checkOrderVerified(orderRef: string): Promise<boolean> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return false;
+  if (!orderRef) return false;
 
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('status, plan, updated_at')
-    .eq('user_id', userData.user.id)
-    .single();
+  const { data: rows } = await supabase
+    .from('stock_movements')
+    .select('note')
+    .like('note', `COMPLETED_ORDER:${orderRef}:%`)
+    .limit(1);
 
-  if (sub && sub.status === 'active') {
+  if (rows && rows.length > 0) {
     return true;
   }
   return false;
@@ -97,7 +96,7 @@ export async function processBankSmsWebhook(smsText: string): Promise<{ success:
       const parts = (row.note || '').split(':'); // PENDING_ORDER:Ref:planKey:amount
       const ref = parts[1];
       const amt = parseFloat(parts[3] || '0');
-      return (text.includes(ref) || amt === parsedAmount) && (row.change === parsedAmount || amt === parsedAmount);
+      return text.includes(ref) || amt === parsedAmount;
     });
 
     if (!matchedRow) {
