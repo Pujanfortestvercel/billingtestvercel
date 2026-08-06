@@ -70,6 +70,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
   const [order, setOrder] = useState<OneApiOrder | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [activating, setActivating] = useState(false);
 
   function copyUpiId() {
     navigator.clipboard.writeText(UPI_ID);
@@ -276,14 +277,35 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                 </p>
               </div>
 
-              {/* Check Payment Verification Button */}
-              <div style={{ marginTop: 14 }}>
+              {/* Verification & Instant Confirmation Buttons */}
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Button
-                  title={`🔍 Verify Payment Status`}
+                  title={`🔍 Auto-Verify Payment via OneAPI`}
                   variant="secondary"
                   block
                   loading={verifying}
                   onClick={handleCheckPayment}
+                />
+                <Button
+                  title={`✅ I Have Transferred ${selectedPlan.price} (Activate Plan)`}
+                  variant="primary"
+                  block
+                  loading={activating}
+                  onClick={async () => {
+                    setActivating(true);
+                    try {
+                      await activateUserSubscription(selectedPlan.key, order?.orderId);
+                      toast(`🎉 Payment Confirmed! ${selectedPlan.title} Subscription Active!`, 'success');
+                      setActivating(false);
+                      setSelectedPlan(null);
+                      setOrder(null);
+                      if (onSuccess) onSuccess();
+                      onClose();
+                    } catch (e: any) {
+                      setActivating(false);
+                      toast(e?.message || 'Could not activate subscription.', 'error');
+                    }
+                  }}
                 />
               </div>
             </div>
