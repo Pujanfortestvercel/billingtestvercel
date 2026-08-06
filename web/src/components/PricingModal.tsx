@@ -242,6 +242,19 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                   Screen auto-updates to <strong>Subscription Active</strong> the instant your bank SMS arrives!
                 </p>
               </div>
+
+              {/* 1-Tap Send Payment Proof on WhatsApp */}
+              <div style={{ marginTop: 14 }}>
+                <a
+                  href={`https://wa.me/919324357300?text=${encodeURIComponent(`Hii! I have paid ${selectedPlan.price} for ${selectedPlan.title} subscription. User: ${user?.email || 'No Email'} (Ref: ${orderRef || ''})`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary"
+                  style={{ width: '100%', textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: 700 }}
+                >
+                  💬 I Have Paid (Send Proof on WhatsApp)
+                </a>
+              </div>
             </div>
           </div>
         )}
