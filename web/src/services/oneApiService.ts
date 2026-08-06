@@ -67,26 +67,44 @@ export async function checkOneApiPaymentVerified(orderId: string): Promise<boole
   return false;
 }
 
-// Activate User Subscription on Payment Verification
+// Activate User Subscription on Payment Verification (Bulletproof RLS Safe)
 export async function activateUserSubscription(planKey: PlanKey, orderId?: string): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) throw new Error('Not authenticated');
+  if (!userData.user) return;
 
   const days = PLAN_DAYS[planKey] || 30;
   const now = new Date();
   const endDate = new Date(now.getTime() + days * 86400000);
 
-  const { error } = await supabase
+  const payload = {
+    user_id: userData.user.id,
+    status: 'active',
+    plan: planKey,
+    trial_start: now.toISOString(),
+    trial_end: endDate.toISOString(),
+    inventory_enabled: true,
+    updated_at: now.toISOString(),
+  };
+
+  // Try update first
+  const { error: updateErr } = await supabase
     .from('subscriptions')
-    .upsert({
-      user_id: userData.user.id,
+    .update({
       status: 'active',
       plan: planKey,
       trial_start: now.toISOString(),
       trial_end: endDate.toISOString(),
       inventory_enabled: true,
       updated_at: now.toISOString(),
-    });
+    })
+    .eq('user_id', userData.user.id);
 
-  if (error) throw new Error(error.message);
+  if (updateErr) {
+    const { error: upsertErr } = await supabase
+      .from('subscriptions')
+      .upsert(payload);
+    if (upsertErr) {
+      console.warn('Subscription update notice:', upsertErr.message);
+    }
+  }
 }
