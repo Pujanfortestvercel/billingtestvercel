@@ -26,26 +26,14 @@ const PLAN_DAYS: Record<string, number> = {
 
 // Create OneAPI Dynamic Order
 export async function createOneApiOrder(planKey: PlanKey, amount: number): Promise<OneApiOrder> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) throw new Error('User not logged in');
-
   const orderId = 'ORD_' + Math.floor(100000 + Math.random() * 900000);
   const note = `REF ${orderId}`;
   
   // Standard UPI intent deep link
   const upiDeepLink = `upi://pay?pa=${UPI_ID}&pn=BusinessSathi&am=${amount}&tn=${encodeURIComponent(note)}&cu=INR`;
   
-  // Dynamic QR code API URL
+  // Dynamic QR code scanner image
   const qrUrl = `/upi_qr_scanner.png`;
-
-  // Store pending transaction record in Supabase
-  await supabase.from('stock_movements').insert({
-    item_id: planKey,
-    user_id: userData.user.id,
-    change: amount,
-    reason: 'opening',
-    note: `ONEAPI_PENDING:${orderId}:${planKey}:${amount}`,
-  });
 
   return {
     orderId,
@@ -60,14 +48,7 @@ export async function createOneApiOrder(planKey: PlanKey, amount: number): Promi
 // Check OneAPI Payment Status
 export async function checkOneApiPaymentVerified(orderId: string): Promise<boolean> {
   if (!orderId) return false;
-
-  const { data: rows } = await supabase
-    .from('stock_movements')
-    .select('note')
-    .like('note', `ONEAPI_SUCCESS:${orderId}:%`)
-    .limit(1);
-
-  return Boolean(rows && rows.length > 0);
+  return false;
 }
 
 // Activate User Subscription on Payment Verification
@@ -92,11 +73,4 @@ export async function activateUserSubscription(planKey: PlanKey, orderId?: strin
     });
 
   if (error) throw new Error(error.message);
-
-  if (orderId) {
-    // Update pending order to success
-    await supabase.from('stock_movements').update({
-      note: `ONEAPI_SUCCESS:${orderId}:${planKey}`,
-    }).like('note', `ONEAPI_PENDING:${orderId}:%`);
-  }
 }
