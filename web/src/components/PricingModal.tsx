@@ -225,13 +225,18 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
             {/* Gateway Checkout Card */}
             <div style={{ textAlign: 'center' }}>
               <Card style={{ padding: 16, display: 'inline-block', maxWidth: 340, width: '100%' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, color: 'var(--text-muted)' }}>
-                  Scan & Pay with GPay / PhonePe / Paytm / BHIM
+                <div style={{ background: 'var(--primary-soft)', border: '1px dashed var(--primary)', borderRadius: 8, padding: '8px 10px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)', letterSpacing: 0.5 }}>
+                    ✅ ALL UPI APPS ACCEPTED
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 600 }}>
+                    GPay · PhonePe · Paytm · FamPay · BHIM · Cred · Amazon Pay
+                  </div>
                 </div>
 
                 {order && (
-                  <div style={{ background: 'var(--primary-soft)', border: '1px solid var(--primary)', padding: '6px 10px', borderRadius: 6, marginBottom: 10, fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
-                    Order ID: <span style={{ fontSize: 15, fontWeight: 800 }}>{order.orderId}</span>
+                  <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', padding: '6px 10px', borderRadius: 6, marginBottom: 10, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+                    Order ID: <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary)' }}>{order.orderId}</span>
                   </div>
                 )}
 
