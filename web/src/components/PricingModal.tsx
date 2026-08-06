@@ -69,7 +69,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null);
   const [order, setOrder] = useState<OneApiOrder | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
-  const [activating, setActivating] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   function copyUpiId() {
     navigator.clipboard.writeText(UPI_ID);
@@ -90,7 +90,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
     }
   }
 
-  // Live polling for OneAPI payment verification
+  // Auto-polling for OneAPI payment verification
   useEffect(() => {
     if (!selectedPlan || !order || !open) return;
 
@@ -98,6 +98,7 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
       const isVerified = await checkOneApiPaymentVerified(order.orderId);
       if (isVerified) {
         clearInterval(interval);
+        await activateUserSubscription(selectedPlan.key, order.orderId);
         toast(`🎉 Payment Verified! ${selectedPlan.title} Subscription Active!`, 'success');
         if (onSuccess) onSuccess();
         onClose();
@@ -107,24 +108,29 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
     return () => clearInterval(interval);
   }, [selectedPlan, order, open]);
 
-  // Activate subscription upon payment confirmation (NO WhatsApp redirect)
-  async function handleConfirmPayment() {
+  // Check & verify payment status when user clicks button
+  async function handleCheckPayment() {
     if (!selectedPlan || !user || !order) return;
 
-    setActivating(true);
+    setVerifying(true);
     try {
-      await activateUserSubscription(selectedPlan.key, order.orderId);
+      const isVerified = await checkOneApiPaymentVerified(order.orderId);
 
-      toast(`🎉 Payment Confirmed! ${selectedPlan.title} Subscription Active!`, 'success');
-      setActivating(false);
-
-      setSelectedPlan(null);
-      setOrder(null);
-      if (onSuccess) onSuccess();
-      onClose();
+      if (isVerified) {
+        await activateUserSubscription(selectedPlan.key, order.orderId);
+        toast(`🎉 Payment Verified! ${selectedPlan.title} Subscription Active!`, 'success');
+        setVerifying(false);
+        setSelectedPlan(null);
+        setOrder(null);
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        setVerifying(false);
+        toast(`❌ Payment not received yet. Please pay ${selectedPlan.price} via GPay/PhonePe and try again.`, 'error');
+      }
     } catch (e: any) {
-      setActivating(false);
-      toast(e?.message || 'Could not activate subscription.', 'error');
+      setVerifying(false);
+      toast(e?.message || 'Error checking payment status.', 'error');
     }
   }
 
@@ -261,18 +267,18 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                   <Spinner /> ⌛ Waiting for Payment Verification...
                 </div>
                 <p className="muted" style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
-                  Screen auto-updates to <strong>Subscription Active</strong> the instant your payment completes!
+                  Screen auto-updates to <strong>Subscription Active</strong> the instant your UPI payment completes!
                 </p>
               </div>
 
-              {/* Pure Verification Confirmation Button */}
+              {/* Check Payment Verification Button */}
               <div style={{ marginTop: 14 }}>
                 <Button
-                  title={`✅ Confirm Payment of ${selectedPlan.price}`}
-                  variant="primary"
+                  title={`🔍 Verify Payment Status`}
+                  variant="secondary"
                   block
-                  loading={activating}
-                  onClick={handleConfirmPayment}
+                  loading={verifying}
+                  onClick={handleCheckPayment}
                 />
               </div>
             </div>
