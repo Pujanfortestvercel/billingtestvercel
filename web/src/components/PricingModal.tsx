@@ -200,19 +200,19 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
             <div style={{ textAlign: 'center' }}>
               <Card style={{ padding: 16, display: 'inline-block', maxWidth: 340, width: '100%' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, color: 'var(--text-muted)' }}>
-                  Scan & Pay with GPay / PhonePe / Paytm
+                  Scan & Pay with GPay / PhonePe / Paytm / BHIM
                 </div>
 
                 {orderRef && (
                   <div style={{ background: 'var(--primary-soft)', border: '1px solid var(--primary)', padding: '6px 10px', borderRadius: 6, marginBottom: 10, fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>
-                    Add Note in GPay: <span style={{ fontSize: 15, fontWeight: 800 }}>REF {orderRef}</span>
+                    Add Note in UPI App: <span style={{ fontSize: 15, fontWeight: 800 }}>REF {orderRef}</span>
                   </div>
                 )}
 
                 {/* Google Pay QR Code Image */}
                 <img
                   src="/upi_qr_scanner.png"
-                  alt="GPay QR Code"
+                  alt="UPI QR Code"
                   style={{ width: '100%', maxWidth: 230, height: 'auto', borderRadius: 8, border: '1px solid var(--border)' }}
                 />
 
@@ -223,13 +223,13 @@ export function PricingModal({ open, onClose, onSuccess }: PricingModalProps) {
                   </button>
                 </div>
 
-                {/* 1-Tap Open GPay Link */}
+                {/* 1-Tap Open UPI Link */}
                 <a
                   href={`upi://pay?pa=${upiId}&pn=BusinessSathi&am=${selectedPlan.amount}&tn=REF%20${orderRef || ''}&cu=INR`}
                   className="btn btn-primary"
                   style={{ width: '100%', marginTop: 12, textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: 700 }}
                 >
-                  🚀 Pay {selectedPlan.price} via GPay App
+                  🚀 Pay {selectedPlan.price} via Any UPI App (GPay / PhonePe / Paytm)
                 </a>
               </Card>
 
