@@ -1,7 +1,5 @@
 // ---------------------------------------------------------------------------
-// LAYOUT — the shell for logged-in business users: a sidebar with the 5
-// sections + a top bar showing the trial/subscription status. On narrow
-// screens the sidebar collapses into a hamburger drawer.
+// LAYOUT — the shell for logged-in business users: a sidebar with 6 sections.
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -23,31 +21,18 @@ const NAV: NavItem[] = [
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
-// The Inventory link only appears when the admin has enabled the feature.
 const INVENTORY_NAV: NavItem = { to: '/inventory', label: 'Inventory', icon: '📊' };
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
-  const { status, daysLeft, inventoryEnabled } = useSubscription();
+  const { inventoryEnabled } = useSubscription();
   const { settings, store } = useSettings();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Insert the Inventory link after Items when the feature is enabled.
   const navItems = inventoryEnabled
     ? [...NAV.slice(0, 4), INVENTORY_NAV, ...NAV.slice(4)]
     : NAV;
-
-  const statusBadge =
-    status === 'active' ? (
-      <span className="badge badge-success">Active</span>
-    ) : status === 'trial' ? (
-      <span className="badge badge-success">
-        Trial · {daysLeft}d left
-      </span>
-    ) : (
-      <span className="badge badge-danger">Expired</span>
-    );
 
   const sidebar = (
     <aside
@@ -186,7 +171,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             zIndex: 40,
           }}
         >
-          <div className="row gap-sm">
+          <div className="row gap-sm" style={{ alignItems: 'center' }}>
             <button
               className="btn btn-ghost btn-sm mobile-only"
               onClick={() => setDrawerOpen(true)}
@@ -194,7 +179,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               ☰
             </button>
-            {statusBadge}
+            <span className="badge badge-success">✨ PRO UNLOCKED</span>
           </div>
           <Button
             title="+ New Bill"
@@ -202,38 +187,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => navigate('/billing')}
           />
         </header>
-
-        {/* Renewal / expiry banner */}
-        {status === 'expired' ? (
-          <div
-            style={{
-              background: 'var(--danger-soft)',
-              color: 'var(--danger)',
-              borderBottom: '1px solid var(--danger)',
-              padding: '12px 22px',
-              fontWeight: 600,
-            }}
-          >
-            ⛔ Your subscription has expired — billing is disabled. Please contact
-            your admin to renew.
-          </div>
-        ) : (status === 'trial' || status === 'active') &&
-          daysLeft !== -1 &&
-          daysLeft <= 2 ? (
-          <div
-            style={{
-              background: 'var(--warning-soft)',
-              color: 'var(--warning)',
-              borderBottom: '1px solid var(--warning)',
-              padding: '12px 22px',
-              fontWeight: 600,
-            }}
-          >
-            ⏰ Your subscription ends{' '}
-            {daysLeft <= 0 ? 'today' : `in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}{' '}
-            — please contact your admin to renew.
-          </div>
-        ) : null}
 
         <ExpiryReminder />
 
