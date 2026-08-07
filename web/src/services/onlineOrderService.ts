@@ -2,7 +2,6 @@
 // ONLINE ORDERS SERVICE
 // ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
-import type { Bill, BillItem, Settings } from '../types/models';
 
 export type OnlineOrder = {
   id: string;
@@ -20,6 +19,7 @@ export type OnlineOrder = {
   }>;
   total_amount: number;
   status: 'pending' | 'accepted' | 'completed';
+  completed_at?: string;
   created_at: string;
 };
 
@@ -41,8 +41,8 @@ export async function createOnlineOrder(orderData: {
   const orderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
   const now = new Date().toISOString();
 
-  // Try creating in bills table with extra flag online_order: true
-  const { data: billRes, error: billErr } = await supabase
+  // Insert into bills table with extra flag online_order: true
+  const { data: billRes } = await supabase
     .from('bills')
     .insert({
       user_id: orderData.userId,
@@ -89,7 +89,17 @@ export async function createOnlineOrder(orderData: {
   };
 }
 
-// Fetch shopkeeper's online orders
+// Delete an online order permanently from DB
+export async function deleteOnlineOrder(orderId: string): Promise<void> {
+  try {
+    await supabase.from('bill_items').delete().eq('bill_id', orderId);
+    await supabase.from('bills').delete().eq('id', orderId);
+  } catch (e) {
+    console.error('Error deleting completed online order:', e);
+  }
+}
+
+// Fetch shopkeeper's online orders (Auto-deletes orders completed > 5 mins ago)
 export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> {
   const { data: bills, error } = await supabase
     .from('bills')
@@ -102,7 +112,30 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
   const onlineBills = bills.filter(b => b.extra && (b.extra as any).is_online_order);
   if (onlineBills.length === 0) return [];
 
-  const billIds = onlineBills.map(b => b.id);
+  const nowMs = Date.now();
+  const FIVE_MINUTES_MS = 5 * 60 * 1000;
+  const expiredIds: string[] = [];
+
+  const activeBills = onlineBills.filter(b => {
+    const extra = (b.extra as any) || {};
+    if (extra.order_status === 'completed' && extra.completed_at) {
+      const completedMs = new Date(extra.completed_at).getTime();
+      if (nowMs - completedMs >= FIVE_MINUTES_MS) {
+        expiredIds.push(b.id);
+        return false; // auto-purge
+      }
+    }
+    return true;
+  });
+
+  // Purge expired orders asynchronously
+  if (expiredIds.length > 0) {
+    expiredIds.forEach(id => deleteOnlineOrder(id));
+  }
+
+  if (activeBills.length === 0) return [];
+
+  const billIds = activeBills.map(b => b.id);
   const { data: billItems } = await supabase
     .from('bill_items')
     .select('*')
@@ -122,7 +155,7 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
     }
   }
 
-  return onlineBills.map(b => ({
+  return activeBills.map(b => ({
     id: b.id,
     order_number: b.bill_number,
     user_id: b.user_id,
@@ -132,6 +165,7 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
     items: itemsMap[b.id] || [],
     total_amount: b.total_amount,
     status: (b.extra as any)?.order_status || 'pending',
+    completed_at: (b.extra as any)?.completed_at,
     created_at: b.created_at,
   }));
 }
@@ -148,10 +182,19 @@ export async function updateOrderStatus(
     .single();
 
   const currentExtra = (bill?.extra as object) || {};
+  const updatedExtra: any = {
+    ...currentExtra,
+    order_status: status,
+  };
+
+  if (status === 'completed' && !updatedExtra.completed_at) {
+    updatedExtra.completed_at = new Date().toISOString();
+  }
+
   await supabase
     .from('bills')
     .update({
-      extra: { ...currentExtra, order_status: status },
+      extra: updatedExtra,
     })
     .eq('id', orderId);
 }

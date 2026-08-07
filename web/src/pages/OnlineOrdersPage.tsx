@@ -2,8 +2,7 @@
 // ONLINE ORDERS PAGE (FOR SHOPKEEPER)
 // ---------------------------------------------------------------------------
 // Shows incoming orders placed by customers through the public storefront!
-// Shopkeepers can view customer details, items ordered, update order status,
-// and convert online customer orders into official bills in 1 tap!
+// Orders marked COMPLETED automatically self-delete after 5 minutes!
 // ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +12,7 @@ import { Button, Card, Spinner, EmptyState } from '../components/UI';
 import {
   fetchOnlineOrders,
   updateOrderStatus,
+  deleteOnlineOrder,
   type OnlineOrder,
 } from '../services/onlineOrderService';
 import { formatCurrency, formatDateTime } from '../utils/format';
@@ -26,7 +26,6 @@ export function OnlineOrdersPage() {
 
   async function loadOrders() {
     if (!user) return;
-    setLoading(true);
     try {
       const data = await fetchOnlineOrders(user.id);
       setOrders(data);
@@ -39,20 +38,42 @@ export function OnlineOrdersPage() {
 
   useEffect(() => {
     loadOrders();
+
+    // Auto refresh every 15 seconds to purge expired orders live!
+    const timer = setInterval(() => {
+      loadOrders();
+    }, 15000);
+
+    return () => clearInterval(timer);
   }, [user]);
 
   async function handleStatusUpdate(orderId: string, status: 'pending' | 'accepted' | 'completed') {
     try {
       await updateOrderStatus(orderId, status);
-      toast(`Order status updated to ${status} ✅`, 'success');
+      if (status === 'completed') {
+        toast('Order marked completed! It will auto-delete in 5 minutes. 🎉', 'success');
+      } else {
+        toast(`Order status updated to ${status} ✅`, 'success');
+      }
       loadOrders();
     } catch (e: any) {
       toast(e?.message || 'Could not update status.', 'error');
     }
   }
 
+  async function handleDelete(orderId: string) {
+    try {
+      await deleteOnlineOrder(orderId);
+      toast('Order deleted.', 'success');
+      loadOrders();
+    } catch (e: any) {
+      toast(e?.message || 'Could not delete order.', 'error');
+    }
+  }
+
   function handleConvertToBill(ord: OnlineOrder) {
-    // Navigate to billing page with pre-filled state
+    // Mark order completed & navigate to billing
+    updateOrderStatus(ord.id, 'completed');
     navigate('/billing', {
       state: {
         customerName: ord.customer_name,
@@ -67,13 +88,20 @@ export function OnlineOrdersPage() {
     });
   }
 
+  function getRemainingMins(completedAt?: string): number {
+    if (!completedAt) return 5;
+    const elapsedMs = Date.now() - new Date(completedAt).getTime();
+    const remainingMs = 5 * 60 * 1000 - elapsedMs;
+    return Math.max(1, Math.ceil(remainingMs / 60000));
+  }
+
   return (
     <div style={{ maxWidth: 800 }}>
       <div className="row spread" style={{ marginBottom: 16 }}>
         <div>
           <h1 style={{ margin: 0 }}>🛍️ Online Orders</h1>
           <p className="muted" style={{ margin: 0, marginTop: 2 }}>
-            Customer orders placed through your public online storefront catalog.
+            Customer orders placed through your public store catalog. Completed orders auto-delete in 5 minutes!
           </p>
         </div>
         <Button title="🔄 Refresh Orders" variant="ghost" onClick={loadOrders} />
@@ -84,88 +112,108 @@ export function OnlineOrdersPage() {
       ) : orders.length === 0 ? (
         <EmptyState
           emoji="🛍️"
-          title="No online orders yet"
+          title="No pending online orders"
           subtitle="When customers order from your public store link, their orders will appear here automatically."
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {orders.map(ord => (
-            <Card key={ord.id} style={{ padding: 18 }}>
-              <div className="row spread" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <strong style={{ fontSize: 17, color: 'var(--primary)' }}>{ord.order_number}</strong>
-                    <span
-                      className={`badge ${
-                        ord.status === 'completed'
-                          ? 'badge-success'
-                          : ord.status === 'accepted'
-                          ? 'badge-primary'
-                          : 'badge-warning'
-                      }`}
-                    >
-                      {ord.status.toUpperCase()}
-                    </span>
+          {orders.map(ord => {
+            const isCompleted = ord.status === 'completed';
+            const minsLeft = isCompleted ? getRemainingMins(ord.completed_at) : 5;
+
+            return (
+              <Card
+                key={ord.id}
+                style={{
+                  padding: 18,
+                  opacity: isCompleted ? 0.85 : 1,
+                  borderLeft: isCompleted ? '4px solid var(--success)' : '4px solid var(--primary)',
+                }}
+              >
+                <div className="row spread" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: 17, color: 'var(--primary)' }}>{ord.order_number}</strong>
+                      <span
+                        className={`badge ${
+                          isCompleted
+                            ? 'badge-success'
+                            : ord.status === 'accepted'
+                            ? 'badge-primary'
+                            : 'badge-warning'
+                        }`}
+                      >
+                        {isCompleted
+                          ? `COMPLETED (Auto-deletes in ${minsLeft}m)`
+                          : ord.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                      📅 {formatDateTime(ord.created_at)}
+                    </div>
                   </div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                    📅 {formatDateTime(ord.created_at)}
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>
+                      {formatCurrency(ord.total_amount)}
+                    </div>
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {ord.items.length} item{ord.items.length === 1 ? '' : 's'}
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>
-                    {formatCurrency(ord.total_amount)}
-                  </div>
-                  <div className="muted" style={{ fontSize: 12 }}>
-                    {ord.items.length} item{ord.items.length === 1 ? '' : 's'}
-                  </div>
+                {/* Customer Details Box */}
+                <div style={{ margin: '12px 0', background: 'var(--surface-2)', padding: 10, borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+                  <div><strong>Customer:</strong> {ord.customer_name} {ord.customer_phone ? `· 📞 ${ord.customer_phone}` : ''}</div>
+                  {ord.customer_address ? <div style={{ marginTop: 2 }}><strong>Delivery Address:</strong> 📍 {ord.customer_address}</div> : null}
                 </div>
-              </div>
 
-              {/* Customer Details Box */}
-              <div style={{ margin: '12px 0', background: 'var(--surface-2)', padding: 10, borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                <div><strong>Customer:</strong> {ord.customer_name} {ord.customer_phone ? `· 📞 ${ord.customer_phone}` : ''}</div>
-                {ord.customer_address ? <div style={{ marginTop: 2 }}><strong>Delivery Address:</strong> 📍 {ord.customer_address}</div> : null}
-              </div>
+                {/* Ordered Items Table */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>ORDERED ITEMS:</div>
+                  {ord.items.map((it, idx) => (
+                    <div key={idx} className="row spread" style={{ fontSize: 13, padding: '3px 0' }}>
+                      <span>{it.item_name} × <strong>{it.qty}</strong></span>
+                      <span>{formatCurrency(it.total)}</span>
+                    </div>
+                  ))}
+                </div>
 
-              {/* Ordered Items Table */}
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>ORDERED ITEMS:</div>
-                {ord.items.map((it, idx) => (
-                  <div key={idx} className="row spread" style={{ fontSize: 13, padding: '3px 0' }}>
-                    <span>{it.item_name} × <strong>{it.qty}</strong></span>
-                    <span>{formatCurrency(it.total)}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
-                <Button
-                  title="🧾 Convert to Official Bill"
-                  variant="primary"
-                  small
-                  onClick={() => handleConvertToBill(ord)}
-                />
-                {ord.status === 'pending' && (
+                {/* Action Buttons */}
+                <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
                   <Button
-                    title="✅ Accept Order"
-                    variant="secondary"
+                    title="🧾 Convert to Official Bill"
+                    variant="primary"
                     small
-                    onClick={() => handleStatusUpdate(ord.id, 'accepted')}
+                    onClick={() => handleConvertToBill(ord)}
                   />
-                )}
-                {ord.status !== 'completed' && (
+                  {ord.status === 'pending' && (
+                    <Button
+                      title="✅ Accept Order"
+                      variant="secondary"
+                      small
+                      onClick={() => handleStatusUpdate(ord.id, 'accepted')}
+                    />
+                  )}
+                  {!isCompleted && (
+                    <Button
+                      title="🎉 Mark Completed"
+                      variant="ghost"
+                      small
+                      onClick={() => handleStatusUpdate(ord.id, 'completed')}
+                    />
+                  )}
                   <Button
-                    title="🎉 Mark Completed"
-                    variant="ghost"
+                    title="🗑 Delete Now"
+                    variant="danger"
                     small
-                    onClick={() => handleStatusUpdate(ord.id, 'completed')}
+                    onClick={() => handleDelete(ord.id)}
                   />
-                )}
-              </div>
-            </Card>
-          ))}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
