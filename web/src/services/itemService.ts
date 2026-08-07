@@ -14,6 +14,14 @@ export async function listItems(): Promise<Item[]> {
   return (data ?? []) as Item[];
 }
 
+export async function getItemCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('items')
+    .select('*', { count: 'exact', head: true });
+  if (error) return 0;
+  return count ?? 0;
+}
+
 // Paginated list for the Items screen — loads a PAGE at a time (scales to
 // thousands). Optional `search` filters by name CONTAINS, case-insensitive.
 export async function fetchItemsPage(params: {
