@@ -1,7 +1,6 @@
 // ---------------------------------------------------------------------------
-// ANALYTICS SERVICE (web-only addition) — lightweight aggregates for the
-// dashboard. Uses head-count queries (no rows transferred) for totals, and a
-// small bounded fetch of recent bills for revenue + the activity feed.
+// ANALYTICS SERVICE — lightweight aggregates for the dashboard.
+// Strictly filtered by user_id for complete multi-tenant account isolation!
 // ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
 import type { Bill } from '../types/models';
@@ -16,27 +15,43 @@ export type DashboardStats = {
   last7: { label: string; total: number }[];
 };
 
-async function headCount(table: string): Promise<number> {
+async function headCount(table: string, userId: string): Promise<number> {
   const { count, error } = await supabase
     .from(table)
-    .select('*', { count: 'exact', head: true });
-  if (error) throw new Error(error.message);
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  if (error) return 0;
   return count ?? 0;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+
+  if (!userId) {
+    return {
+      customers: 0,
+      items: 0,
+      bills: 0,
+      revenueTotal: 0,
+      revenueThisMonth: 0,
+      recent: [],
+      last7: [],
+    };
+  }
+
   const [customers, items, bills] = await Promise.all([
-    headCount('customers'),
-    headCount('items'),
-    headCount('bills'),
+    headCount('customers', userId),
+    headCount('items', userId),
+    headCount('bills', userId),
   ]);
 
-  // All bills for revenue math. Bills are the core dataset; for very large
-  // accounts this could be swapped for a Postgres RPC sum() later.
   const { data, error } = await supabase
     .from('bills')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
+
   if (error) throw new Error(error.message);
   const all = (data ?? []) as Bill[];
 
