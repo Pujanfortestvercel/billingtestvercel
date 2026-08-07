@@ -56,6 +56,7 @@ export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {
     lineDiscount: false,
     billExtras: [],
     expiryAlerts: false,
+    hideTax: true,
   },
   medical: {
     key: 'medical',
@@ -79,28 +80,30 @@ export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {
     key: 'restaurant',
     label: 'Restaurant / Café',
     emoji: '🍽️',
-    blurb: 'Table number, dine-in / takeaway, and a service charge.',
+    blurb: 'Table number and dine-in / takeaway order options.',
     itemLabel: 'Dish',
     qtyLabel: 'Qty',
     lineFields: [],
     lineDiscount: false,
-    billExtras: ['table_no', 'order_type', 'service_charge'],
+    billExtras: ['table_no', 'order_type'],
     expiryAlerts: false,
+    hideTax: true,
   },
   apparel: {
     key: 'apparel',
     label: 'Retail / Apparel',
     emoji: '👕',
-    blurb: 'Size / variant, HSN code, and per-item discount.',
+    blurb: 'Size / variant and HSN code.',
     itemLabel: 'Product',
     qtyLabel: 'Qty',
     lineFields: [
       { key: 'size', label: 'Size / Variant', type: 'text', placeholder: 'M / Red' },
       { key: 'hsn', label: 'HSN', type: 'text', placeholder: 'HSN code' },
     ],
-    lineDiscount: true,
+    lineDiscount: false,
     billExtras: [],
     expiryAlerts: false,
+    hideTax: true,
   },
   electronics: {
     key: 'electronics',
@@ -116,6 +119,7 @@ export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {
     lineDiscount: false,
     billExtras: [],
     expiryAlerts: false,
+    hideTax: true,
   },
   services: {
     key: 'services',
@@ -128,6 +132,7 @@ export const STORE_TYPES: Record<StoreType, StoreTypeConfig> = {
     lineDiscount: false,
     billExtras: ['notes'],
     expiryAlerts: false,
+    hideTax: true,
   },
 };
 
