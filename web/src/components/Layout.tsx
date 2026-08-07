@@ -25,7 +25,7 @@ const INVENTORY_NAV: NavItem = { to: '/inventory', label: 'Inventory', icon: '�
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
-  const { status, daysLeft, inventoryEnabled } = useSubscription();
+  const { inventoryEnabled } = useSubscription();
   const { settings, store } = useSettings();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -33,19 +33,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = inventoryEnabled
     ? [...NAV.slice(0, 4), INVENTORY_NAV, ...NAV.slice(4)]
     : NAV;
-
-  const statusBadge =
-    status === 'active' ? (
-      <span className="badge badge-success">
-        {daysLeft === -1 ? 'Subscribed (Permanent)' : `Subscribed · ${daysLeft}d left`}
-      </span>
-    ) : status === 'trial' ? (
-      <span className="badge badge-success">
-        Trial · {daysLeft}d left
-      </span>
-    ) : (
-      <span className="badge badge-danger">Expired</span>
-    );
 
   const sidebar = (
     <aside
@@ -192,7 +179,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               ☰
             </button>
-            {statusBadge}
           </div>
           <Button
             title="+ New Bill"
@@ -200,22 +186,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => navigate('/billing')}
           />
         </header>
-
-        {/* Renewal / expiry banner */}
-        {status === 'expired' ? (
-          <div
-            style={{
-              background: 'var(--danger-soft)',
-              color: 'var(--danger)',
-              borderBottom: '1px solid var(--danger)',
-              padding: '12px 22px',
-              fontWeight: 600,
-            }}
-          >
-            ⛔ Your subscription has expired — billing is disabled. Please contact
-            your admin to renew.
-          </div>
-        ) : null}
 
         <ExpiryReminder />
 

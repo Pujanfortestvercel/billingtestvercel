@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// DASHBOARD — welcome, subscription status card, KPI cards, 7-day chart, bills
+// DASHBOARD — welcome, KPI cards, 7-day chart, bills feed
 // ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +18,7 @@ import { formatCurrency, formatDateTime } from '../utils/format';
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const { status, daysLeft, loading: subLoading, inventoryEnabled } = useSubscription();
+  const { inventoryEnabled } = useSubscription();
   const { store } = useSettings();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -60,35 +60,15 @@ export function DashboardPage() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>Dashboard</h1>
-      <p className="muted" style={{ marginTop: -8 }}>
-        Welcome back, {user?.email}
-      </p>
-
-      {/* Subscription Status Card (No Payment Gateway) */}
-      <Card style={{ marginBottom: 18 }}>
-        <div className="row spread" style={{ flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div className="muted" style={{ fontSize: 13, fontWeight: 600 }}>
-              Subscription Status
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginTop: 2, color: status === 'active' ? 'var(--primary)' : 'var(--text)' }}>
-              {subLoading
-                ? 'Checking…'
-                : status === 'active'
-                ? daysLeft === -1
-                  ? 'Active ✓ (Permanent)'
-                  : `Subscribed — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
-                : status === 'trial'
-                ? `Free Trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
-                : 'Expired — Contact admin to renew'}
-            </div>
-          </div>
-          <div className="row gap-sm" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
-            <Button title="🧾 Create new bill" variant="primary" onClick={() => navigate('/billing')} />
-          </div>
+      <div className="row spread" style={{ alignItems: 'center', marginBottom: 16 }}>
+        <div>
+          <h1 style={{ margin: 0 }}>Dashboard</h1>
+          <p className="muted" style={{ margin: 0, marginTop: 2 }}>
+            Welcome back, {user?.email}
+          </p>
         </div>
-      </Card>
+        <Button title="🧾 Create New Bill" variant="primary" onClick={() => navigate('/billing')} />
+      </div>
 
       {/* Expiry reminders (medical stores) */}
       {store.expiryAlerts && expiring.length > 0 ? (
