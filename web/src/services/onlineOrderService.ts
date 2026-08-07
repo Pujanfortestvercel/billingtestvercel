@@ -42,7 +42,7 @@ export async function createOnlineOrder(orderData: {
   const now = new Date().toISOString();
 
   // Insert into bills table with extra flag online_order: true
-  const { data: billRes } = await supabase
+  const { data: billRes, error: billErr } = await supabase
     .from('bills')
     .insert({
       user_id: orderData.userId,
@@ -60,10 +60,14 @@ export async function createOnlineOrder(orderData: {
     .select()
     .single();
 
-  const billId = billRes ? billRes.id : 'ORD_' + Date.now();
+  if (billErr) {
+    throw new Error('Database Error: ' + billErr.message);
+  }
+
+  const billId = billRes.id;
 
   // Insert bill items
-  if (billRes) {
+  if (orderData.items.length > 0) {
     const itemRows = orderData.items.map(it => ({
       bill_id: billId,
       item_id: it.item_id,
@@ -72,7 +76,11 @@ export async function createOnlineOrder(orderData: {
       rate: it.rate,
       total: it.total,
     }));
-    await supabase.from('bill_items').insert(itemRows);
+
+    const { error: itemErr } = await supabase.from('bill_items').insert(itemRows);
+    if (itemErr) {
+      console.error('Error inserting bill items:', itemErr);
+    }
   }
 
   return {
