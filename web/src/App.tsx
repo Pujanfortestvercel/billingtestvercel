@@ -38,9 +38,7 @@ function UserApp() {
           <Route path="/online-orders" element={<OnlineOrdersPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/items" element={<ItemsPage />} />
-          {inventoryEnabled ? (
-            <Route path="/inventory" element={<InventoryPage />} />
-          ) : null}
+          <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
