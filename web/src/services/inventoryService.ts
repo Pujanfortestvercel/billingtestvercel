@@ -1,19 +1,12 @@
 // ---------------------------------------------------------------------------
 // INVENTORY SERVICE — manual stock changes + low-stock lookups.
-// Sales/returns are handled automatically by DB triggers on bill_items
-// (migration 004); this service is for the things a user does by hand:
-// receiving stock, correcting a count, setting opening stock.
+// Strictly filtered by user_id for multi-tenant privacy!
 // ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
 import type { Item, StockMovement } from '../types/models';
 
-// Manual reasons the client is allowed to record (a 'sale' can only come from
-// a bill, never directly).
 export type StockReason = 'restock' | 'adjustment' | 'return' | 'opening';
 
-// Record a manual stock change. `change` is signed: +5 received, -2 correction.
-// Goes through the adjust_stock RPC, which verifies ownership server-side and
-// keeps items.stock_qty in sync via the ledger trigger.
 export async function adjustStock(
   itemId: string,
   change: number,
@@ -29,13 +22,15 @@ export async function adjustStock(
   if (error) throw new Error(error.message);
 }
 
-// Tracked items at or below their reorder level (lowest stock first). Powers
-// the dashboard low-stock widget. PostgREST can't compare two columns, so we
-// fetch tracked items ordered by stock and filter against reorder_level here.
 export async function listLowStock(limit = 1000): Promise<Item[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+
   const { data, error } = await supabase
     .from('items')
     .select('*')
+    .eq('user_id', uid)
     .eq('track_stock', true)
     .order('stock_qty', { ascending: true })
     .limit(limit);
@@ -45,7 +40,6 @@ export async function listLowStock(limit = 1000): Promise<Item[]> {
   );
 }
 
-// Recent stock movements for one item (newest first) — for a history view.
 export async function listMovements(
   itemId: string,
   limit = 50,
@@ -60,13 +54,17 @@ export async function listMovements(
   return (data ?? []) as StockMovement[];
 }
 
-// A movement joined with its item's name — for the account-wide history feed.
 export type MovementWithItem = StockMovement & { item_name?: string };
 
 export async function listRecentMovements(limit = 50): Promise<MovementWithItem[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+
   const { data, error } = await supabase
     .from('stock_movements')
     .select('*, items(item_name)')
+    .eq('user_id', uid)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
@@ -76,15 +74,14 @@ export async function listRecentMovements(limit = 50): Promise<MovementWithItem[
   }));
 }
 
-// One row of the stock valuation report.
 export type ValuationRow = {
   item_id: string;
   item_name: string;
   stock_qty: number;
   reorder_level: number;
   cost_price: number | null;
-  value: number; // stock_qty * cost_price
-  low: boolean; // at/below reorder level
+  value: number;
+  low: boolean;
 };
 
 export type InventorySummary = {
@@ -94,12 +91,18 @@ export type InventorySummary = {
   lowCount: number;
 };
 
-// Every tracked item with its on-hand quantity and stock value. Powers the
-// Inventory page (valuation table + counts).
 export async function getInventorySummary(): Promise<InventorySummary> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+
+  if (!uid) {
+    return { rows: [], totalValue: 0, trackedCount: 0, lowCount: 0 };
+  }
+
   const { data, error } = await supabase
     .from('items')
     .select('*')
+    .eq('user_id', uid)
     .eq('track_stock', true)
     .order('item_name', { ascending: true });
   if (error) throw new Error(error.message);
