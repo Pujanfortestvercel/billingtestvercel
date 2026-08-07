@@ -156,7 +156,18 @@ export function buildInvoiceHtml(
 
       <table class="totals">${breakdown}</table>
 
-      ${bill.extra?.notes ? `<div class="notes"><strong>Notes:</strong> ${esc(bill.extra.notes)}</div>` : ''}
+      <div style="margin-top: 36px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid;">
+        <div style="font-size: 11px; color: #6B7280; max-width: 300px;">
+          ${bill.extra?.notes ? `<div style="font-size: 13px; color: #374151; margin-bottom: 8px;"><strong>Notes:</strong> ${esc(bill.extra.notes)}</div>` : ''}
+          <div>Thank you for your business!</div>
+          <div style="margin-top: 2px; font-size: 10px;">This is a computer generated invoice.</div>
+        </div>
+        <div style="text-align: center; width: 220px;">
+          <div style="height: 50px; border-bottom: 1px dashed #4B5563; margin-bottom: 8px;"></div>
+          <div style="font-size: 12px; font-weight: 700; color: #111827;">Authorized Signatory</div>
+          <div style="font-size: 11px; color: #6B7280; margin-top: 2px;">For ${esc(shopName)}</div>
+        </div>
+      </div>
     </body>
   </html>`;
 }
