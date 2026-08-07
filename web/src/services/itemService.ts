@@ -1,23 +1,32 @@
 // ---------------------------------------------------------------------------
 // ITEM SERVICE — read/write the user's products (used for item autocomplete).
-// Mirrors the customer service.
 // ---------------------------------------------------------------------------
 import { supabase, escapeLike } from '../lib/supabase';
 import type { Item } from '../types/models';
 
-export async function listItems(): Promise<Item[]> {
+export async function listItems(userId?: string): Promise<Item[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userId || userData.user?.id;
+  if (!uid) return [];
+
   const { data, error } = await supabase
     .from('items')
     .select('*')
+    .eq('user_id', uid)
     .order('item_name', { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as Item[];
 }
 
-export async function getItemCount(): Promise<number> {
+export async function getItemCount(userId?: string): Promise<number> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userId || userData.user?.id;
+  if (!uid) return 0;
+
   const { count, error } = await supabase
     .from('items')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', uid);
   if (error) return 0;
   return count ?? 0;
 }
@@ -28,10 +37,16 @@ export async function fetchItemsPage(params: {
   search?: string;
   limit: number;
   offset: number;
+  userId?: string;
 }): Promise<Item[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = params.userId || userData.user?.id;
+  if (!uid) return [];
+
   let query = supabase
     .from('items')
     .select('*')
+    .eq('user_id', uid)
     .order('item_name', { ascending: true })
     .range(params.offset, params.offset + params.limit - 1);
   const s = params.search?.trim();
@@ -42,12 +57,17 @@ export async function fetchItemsPage(params: {
 }
 
 // Autocomplete: items that START WITH `query`, case-insensitive.
-export async function searchItems(query: string, limit = 8): Promise<Item[]> {
+export async function searchItems(query: string, limit = 8, userId?: string): Promise<Item[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userId || userData.user?.id;
+  if (!uid) return [];
+
   const q = query.trim();
   if (!q) return [];
   const { data, error } = await supabase
     .from('items')
     .select('*')
+    .eq('user_id', uid)
     .ilike('item_name', `${escapeLike(q)}%`)
     .order('item_name', { ascending: true })
     .limit(limit);
@@ -108,6 +128,7 @@ export async function findOrCreateItem(
   const { data, error } = await supabase
     .from('items')
     .select('*')
+    .eq('user_id', userId)
     .ilike('item_name', escapeLike(trimmed))
     .limit(1);
   if (error) throw new Error(error.message);
