@@ -41,7 +41,15 @@ export async function createOnlineOrder(orderData: {
   const orderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
   const now = new Date().toISOString();
 
-  // Insert into bills table with extra flag online_order: true
+  const formattedItems = orderData.items.map(it => ({
+    item_id: it.item_id || null,
+    item_name: it.item_name,
+    qty: Number(it.qty) || 1,
+    rate: Number(it.rate) || 0,
+    total: Number(it.total) || (Number(it.rate) || 0) * (Number(it.qty) || 1),
+  }));
+
+  // Insert into bills table with extra flag online_order: true AND items payload
   const { data: billRes, error: billErr } = await supabase
     .from('bills')
     .insert({
@@ -55,6 +63,7 @@ export async function createOnlineOrder(orderData: {
         order_status: 'pending',
         customer_phone: orderData.customerPhone || '',
         patient_address: orderData.customerAddress || '',
+        order_items: formattedItems,
       },
     })
     .select()
@@ -66,20 +75,21 @@ export async function createOnlineOrder(orderData: {
 
   const billId = billRes.id;
 
-  // Insert bill items
-  if (orderData.items.length > 0) {
-    const itemRows = orderData.items.map(it => ({
+  // Insert into bill_items table
+  if (formattedItems.length > 0) {
+    const itemRows = formattedItems.map(it => ({
       bill_id: billId,
       item_id: it.item_id,
       item_name: it.item_name,
       qty: it.qty,
       rate: it.rate,
       total: it.total,
+      discount: 0,
     }));
 
     const { error: itemErr } = await supabase.from('bill_items').insert(itemRows);
     if (itemErr) {
-      console.error('Error inserting bill items:', itemErr);
+      console.error('Warning: bill_items insert error:', itemErr);
     }
   }
 
@@ -90,7 +100,7 @@ export async function createOnlineOrder(orderData: {
     customer_name: orderData.customerName,
     customer_phone: orderData.customerPhone,
     customer_address: orderData.customerAddress,
-    items: orderData.items,
+    items: formattedItems as any,
     total_amount: orderData.totalAmount,
     status: 'pending',
     created_at: now,
@@ -150,7 +160,7 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
     .in('bill_id', billIds);
 
   const itemsMap: Record<string, any[]> = {};
-  if (billItems) {
+  if (billItems && billItems.length > 0) {
     for (const it of billItems) {
       if (!itemsMap[it.bill_id]) itemsMap[it.bill_id] = [];
       itemsMap[it.bill_id].push({
@@ -163,19 +173,27 @@ export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> 
     }
   }
 
-  return activeBills.map(b => ({
-    id: b.id,
-    order_number: b.bill_number,
-    user_id: b.user_id,
-    customer_name: b.customer_name,
-    customer_phone: (b.extra as any)?.customer_phone || '',
-    customer_address: (b.extra as any)?.patient_address || '',
-    items: itemsMap[b.id] || [],
-    total_amount: b.total_amount,
-    status: (b.extra as any)?.order_status || 'pending',
-    completed_at: (b.extra as any)?.completed_at,
-    created_at: b.created_at,
-  }));
+  return activeBills.map(b => {
+    const extra = (b.extra as any) || {};
+    // Use bill_items table if available, else fallback to extra.order_items JSON!
+    const resolvedItems = itemsMap[b.id] && itemsMap[b.id].length > 0
+      ? itemsMap[b.id]
+      : (extra.order_items || []);
+
+    return {
+      id: b.id,
+      order_number: b.bill_number,
+      user_id: b.user_id,
+      customer_name: b.customer_name,
+      customer_phone: extra.customer_phone || '',
+      customer_address: extra.patient_address || '',
+      items: resolvedItems,
+      total_amount: b.total_amount,
+      status: extra.order_status || 'pending',
+      completed_at: extra.completed_at,
+      created_at: b.created_at,
+    };
+  });
 }
 
 // Update order status
