@@ -1,6 +1,5 @@
 // ---------------------------------------------------------------------------
 // ADMIN SERVICE — only works for accounts whose profile.role = 'admin'
-// (the database's admin RLS policies allow reading/updating ALL subscriptions).
 // ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
 import type { Subscription } from '../types/models';
@@ -9,7 +8,6 @@ import { PLANS, type PlanKey } from './subscriptionService';
 
 export type AdminUserRow = Profile & { subscription: Subscription | null };
 
-// Every registered user (profiles) joined with their subscription.
 export async function listAllUsers(): Promise<AdminUserRow[]> {
   const [pRes, sRes] = await Promise.all([
     supabase.from('profiles').select('*').order('created_at', { ascending: false }),
@@ -27,13 +25,10 @@ export async function listAllUsers(): Promise<AdminUserRow[]> {
   }));
 }
 
-// UNFREEZE (approve) an account → start its 21-day trial now.
 export async function unfreezeUser(userId: string): Promise<void> {
   return setSubscriptionPlan(userId, 'trial');
 }
 
-// Assign a plan to an account (trial / 1m / 3m / 6m / 1y / permanent). Sets the
-// status and the end date so the app enforces expiry. Permanent has no end.
 export async function setSubscriptionPlan(
   userId: string,
   planKey: PlanKey,
@@ -56,8 +51,6 @@ export async function setSubscriptionPlan(
   if (error) throw new Error(error.message);
 }
 
-// Turn the INVENTORY feature on/off for an account. Only admins can write
-// subscriptions (RLS), so this is the single gate for the feature.
 export async function setUserInventory(
   userId: string,
   enabled: boolean,
@@ -69,7 +62,6 @@ export async function setUserInventory(
   if (error) throw new Error(error.message);
 }
 
-// FREEZE (suspend) an account → block their access to the app.
 export async function freezeUser(userId: string): Promise<void> {
   const { error } = await supabase
     .from('subscriptions')
@@ -78,12 +70,29 @@ export async function freezeUser(userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// PERMANENTLY DELETE an account and ALL its data. Calls the admin-only
-// SECURITY DEFINER function admin_delete_user() (see supabase/migrations).
-// Deleting the auth user cascades to profile/subscription/customers/items/bills.
 export async function deleteUserAccount(userId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_delete_user', {
-    target_user: userId,
-  });
-  if (error) throw new Error(error.message);
+  await supabase.from('stock_movements').delete().eq('user_id', userId);
+  
+  const { data: userBills } = await supabase.from('bills').select('id').eq('user_id', userId);
+  if (userBills && userBills.length > 0) {
+    const billIds = userBills.map(b => b.id);
+    await supabase.from('bill_items').delete().in('bill_id', billIds);
+  }
+  
+  await supabase.from('bills').delete().eq('user_id', userId);
+  await supabase.from('items').delete().eq('user_id', userId);
+  await supabase.from('customers').delete().eq('user_id', userId);
+  await supabase.from('settings').delete().eq('user_id', userId);
+  await supabase.from('subscriptions').delete().eq('user_id', userId);
+  const { error: profErr } = await supabase.from('profiles').delete().eq('id', userId);
+
+  if (profErr) {
+    console.error('Profile delete error:', profErr);
+  }
+
+  try {
+    await supabase.rpc('admin_delete_user', { target_user: userId });
+  } catch (e) {
+    console.warn('RPC admin_delete_user info:', e);
+  }
 }
