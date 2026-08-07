@@ -14,6 +14,7 @@ import {
   createItem,
   deleteItem,
   fetchItemsPage,
+  getItemCount,
   updateItem,
 } from '../services/itemService';
 import { adjustStock, type StockReason } from '../services/inventoryService';
@@ -98,12 +99,16 @@ export function ItemsPage() {
   const [csvText, setCsvText] = useState('');
   const [importing, setImporting] = useState(false);
 
+  const [totalItemCount, setTotalItemCount] = useState(0);
+
   const loadFirst = useCallback(async () => {
     setLoading(true);
     try {
       const page = await fetchItemsPage({ search: debounced, limit: PAGE, offset: 0 });
       setItems(page);
       setHasMore(page.length === PAGE);
+      const count = await getItemCount();
+      setTotalItemCount(count);
     } catch (e: any) {
       toast(e?.message ?? 'Could not load items.', 'error');
     } finally {
@@ -269,7 +274,7 @@ export function ItemsPage() {
         </div>
       </div>
 
-      <StorefrontUnlockCard itemCount={items.length} />
+      <StorefrontUnlockCard itemCount={totalItemCount} />
 
       <input
         className="input"
