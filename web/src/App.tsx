@@ -1,10 +1,5 @@
 // ---------------------------------------------------------------------------
-// APP ROUTER — decides WHICH part of the app to show, mirroring the original
-// RootNavigator:
-//   • not logged in              → Auth screens (Login/Signup)
-//   • logged in as ADMIN          → Admin page
-//   • logged in, account FROZEN   → "awaiting approval" screen
-//   • logged in, trial/active     → the billing app (sidebar layout)
+// APP ROUTER — handles public routes (/store/:userId), auth, and user app routes.
 // ---------------------------------------------------------------------------
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
@@ -26,6 +21,7 @@ import { BillingPage } from './pages/BillingPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { PublicStorePage } from './pages/PublicStorePage';
 import { PendingApprovalPage } from './pages/PendingApprovalPage';
 import { NotConfiguredPage } from './pages/NotConfiguredPage';
 
@@ -46,6 +42,7 @@ function UserApp() {
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/store/:userId" element={<PublicStorePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
@@ -60,12 +57,22 @@ export function App() {
   if (!isSupabaseConfigured) return <NotConfiguredPage />;
   if (initializing) return <Spinner text="Starting…" />;
 
-  // Not logged in → auth screens only.
+  // Public Store Route — accessible to anyone without login!
+  if (location.pathname.startsWith('/store/')) {
+    return (
+      <Routes>
+        <Route path="/store/:userId" element={<PublicStorePage />} />
+      </Routes>
+    );
+  }
+
+  // Not logged in → auth screens or public store.
   if (!user) {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/store/:userId" element={<PublicStorePage />} />
         <Route
           path="*"
           element={<Navigate to="/login" replace state={{ from: location }} />}

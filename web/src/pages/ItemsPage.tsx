@@ -61,6 +61,8 @@ function parseCsv(text: string): CsvRow[] {
   });
 }
 
+import { StorefrontUnlockCard } from '../components/StorefrontUnlockCard';
+
 export function ItemsPage() {
   const { user } = useAuth();
   const { inventoryEnabled } = useSubscription();
@@ -266,6 +268,8 @@ export function ItemsPage() {
           <Button title="+ Add item" onClick={openAdd} />
         </div>
       </div>
+
+      <StorefrontUnlockCard itemCount={items.length} />
 
       <input
         className="input"
