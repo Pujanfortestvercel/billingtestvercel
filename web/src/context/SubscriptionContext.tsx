@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// SUBSCRIPTION CONTEXT — loads user subscription & respects admin inventory toggle
+// SUBSCRIPTION CONTEXT — PERMANENT UNLIMITED ACCESS & INVENTORY ENABLED
 // ---------------------------------------------------------------------------
 import {
   createContext,
@@ -60,16 +60,13 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
     refresh();
   }, [refresh]);
 
-  const { status, daysLeft } = computeStatus(subscription);
-
   const value: SubscriptionContextValue = {
     subscription,
-    status: 'active', // keep app 100% usable without payment lockouts
+    status: 'active',
     daysLeft: -1,
     isUsable: true,
-    // Dynamically respect the Admin Panel toggle for Inventory!
-    inventoryEnabled: subscription ? !!subscription.inventory_enabled : true,
-    loading,
+    inventoryEnabled: true, // Permanent 100% enabled for all users
+    loading: false,
     refresh,
   };
 

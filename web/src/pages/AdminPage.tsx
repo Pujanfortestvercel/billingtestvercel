@@ -1,11 +1,9 @@
 // ---------------------------------------------------------------------------
 // ADMIN — the app owner's control panel. Lists every BUSINESS account that
 // registered. For each one the admin can:
-//   • assign a PLAN (21-day trial / 1m / 3m / 6m / 1y / permanent) → the app
-//     enforces the expiry date,
+//   • assign a PLAN (21-day trial / 1m / 3m / 6m / 1y / permanent),
 //   • Freeze (suspend access),
 //   • Delete the account permanently (cascades all their data).
-// Admin accounts are hidden from the list.
 // ---------------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +13,6 @@ import {
   listAllUsers,
   freezeUser,
   setSubscriptionPlan,
-  setUserInventory,
   deleteUserAccount,
   type AdminUserRow,
 } from '../services/adminService';
@@ -101,12 +98,6 @@ export function AdminPage() {
               run(() => setSubscriptionPlan(item.id, plan), `Plan set: ${label}`)
             }
             onFreeze={() => run(() => freezeUser(item.id), 'Account suspended.')}
-            onToggleInventory={enabled =>
-              run(
-                () => setUserInventory(item.id, enabled),
-                enabled ? 'Inventory enabled.' : 'Inventory disabled.',
-              )
-            }
             onDelete={() => removeAccount(item)}
           />
         ))
@@ -119,19 +110,14 @@ function AdminRow({
   row,
   onApplyPlan,
   onFreeze,
-  onToggleInventory,
   onDelete,
 }: {
   row: AdminUserRow;
   onApplyPlan: (plan: PlanKey, label: string) => void;
-  onToggleInventory: (enabled: boolean) => void;
   onFreeze: () => void;
   onDelete: () => void;
 }) {
   const { status, daysLeft } = computeStatus(row.subscription);
-  // Default the dropdown to the current plan, else the trial. Clamp to a known
-  // key so a legacy/unknown stored plan can't leave the <select> unmatched (and
-  // later crash the Apply handler's lookup).
   const [plan, setPlan] = useState<PlanKey>(
     PLANS.some(p => p.key === row.subscription?.plan)
       ? (row.subscription!.plan as PlanKey)
@@ -193,16 +179,6 @@ function AdminRow({
             }}
           />
           <Button title="Freeze" variant="danger" small onClick={onFreeze} />
-          <Button
-            title={
-              row.subscription?.inventory_enabled
-                ? '📦 Inventory: On'
-                : '📦 Inventory: Off'
-            }
-            variant={row.subscription?.inventory_enabled ? undefined : 'ghost'}
-            small
-            onClick={() => onToggleInventory(!row.subscription?.inventory_enabled)}
-          />
           <Button title="🗑 Delete" variant="danger" small onClick={onDelete} />
         </div>
       </div>

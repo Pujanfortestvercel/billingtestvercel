@@ -18,22 +18,18 @@ const NAV: NavItem[] = [
   { to: '/online-orders', label: 'Online Orders', icon: '🛍️' },
   { to: '/customers', label: 'Customers', icon: '👥' },
   { to: '/items', label: 'Items', icon: '📦' },
+  { to: '/inventory', label: 'Inventory', icon: '📊' },
   { to: '/history', label: 'Bill History', icon: '🗂️' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
-const INVENTORY_NAV: NavItem = { to: '/inventory', label: 'Inventory', icon: '📊' };
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
-  const { inventoryEnabled } = useSubscription();
   const { settings, store } = useSettings();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const navItems = inventoryEnabled
-    ? [...NAV.slice(0, 4), INVENTORY_NAV, ...NAV.slice(4)]
-    : NAV;
+  const navItems = NAV;
 
   const sidebar = (
     <aside
