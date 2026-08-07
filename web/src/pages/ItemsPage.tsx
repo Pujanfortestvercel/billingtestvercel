@@ -301,8 +301,23 @@ export function ItemsPage() {
                   <div className="row gap-sm" style={{ flexWrap: 'wrap' }}>
                     <strong style={{ fontSize: 17 }}>{it.item_name}</strong>
                     {it.default_rate != null ? (
-                      <span className="badge badge-primary">{formatCurrency(it.default_rate)}</span>
-                    ) : null}
+                      <span
+                        className="badge badge-primary"
+                        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        onClick={() => openEdit(it)}
+                        title="Click to edit price"
+                      >
+                        {formatCurrency(it.default_rate)} ✏️
+                      </span>
+                    ) : (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => openEdit(it)}
+                        style={{ padding: '2px 8px', fontSize: 12 }}
+                      >
+                        + Set Price ✏️
+                      </button>
+                    )}
                     {tracked ? (
                       <span className={`badge ${low ? 'badge-danger' : 'badge-success'}`}>
                         {low ? '⚠️ ' : ''}In stock: {qty}
