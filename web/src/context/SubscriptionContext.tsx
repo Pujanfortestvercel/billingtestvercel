@@ -1,10 +1,21 @@
 // ---------------------------------------------------------------------------
-// SUBSCRIPTION CONTEXT — SHARED CONTEXT PROVIDER (UNLOCKED)
+// SUBSCRIPTION CONTEXT — loads user subscription & respects admin inventory toggle
 // ---------------------------------------------------------------------------
-import { createContext, useContext } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import type { PropsWithChildren } from 'react';
+import { useAuth } from './AuthContext';
 import type { Subscription } from '../types/models';
-import type { SubStatus } from '../services/subscriptionService';
+import {
+  computeStatus,
+  getSubscription,
+  type SubStatus,
+} from '../services/subscriptionService';
 
 type SubscriptionContextValue = {
   subscription: Subscription | null;
@@ -21,22 +32,45 @@ const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(
 );
 
 export function SubscriptionProvider({ children }: PropsWithChildren) {
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const sub = await getSubscription(user.id);
+        setSubscription(sub);
+        setLoading(false);
+        return;
+      } catch (e) {
+        if (attempt === 2) {
+          console.error('Could not load subscription:', e);
+          setLoading(false);
+          return;
+        }
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const { status, daysLeft } = computeStatus(subscription);
+
   const value: SubscriptionContextValue = {
-    subscription: {
-      id: 'active',
-      user_id: 'active',
-      trial_start: new Date().toISOString(),
-      trial_end: null,
-      status: 'active',
-      plan: 'permanent',
-      inventory_enabled: true,
-    },
-    status: 'active',
+    subscription,
+    status: 'active', // keep app 100% usable without payment lockouts
     daysLeft: -1,
     isUsable: true,
-    inventoryEnabled: true,
-    loading: false,
-    refresh: async () => {},
+    // Dynamically respect the Admin Panel toggle for Inventory!
+    inventoryEnabled: subscription ? !!subscription.inventory_enabled : true,
+    loading,
+    refresh,
   };
 
   return (
