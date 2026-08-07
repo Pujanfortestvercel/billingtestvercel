@@ -3,8 +3,8 @@
 // ---------------------------------------------------------------------------
 // Shares with the whole app: who is logged in, their ROLE (admin vs user),
 // and functions to sign up / sign in / sign out.
-//
-// Any screen can do:   const { user, isAdmin, signIn } = useAuth();
+// Includes 4-second heartbeat session verification for instant auto-logout
+// when an account is deleted by Admin!
 // ---------------------------------------------------------------------------
 
 import React, {
@@ -69,6 +69,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         if (active) {
           if (!p) {
             supabase.auth.signOut();
+            setSession(null);
             setProfile(null);
           } else {
             setProfile(p);
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       .catch(() => {
         if (active) {
           supabase.auth.signOut();
+          setSession(null);
           setProfile(null);
         }
       })
@@ -87,6 +89,31 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return () => {
       active = false;
     };
+  }, [session?.user?.id]);
+
+  // 3) Heartbeat session verification: check if account was deleted by Admin
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const heartbeat = setInterval(async () => {
+      try {
+        const p = await getMyProfile(userId);
+        if (!p) {
+          console.warn('Account was deleted by Admin. Logging out immediately...');
+          await supabase.auth.signOut();
+          setSession(null);
+          setProfile(null);
+        }
+      } catch (e) {
+        console.warn('Profile check failed. Logging out...');
+        await supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
+      }
+    }, 4000);
+
+    return () => clearInterval(heartbeat);
   }, [session?.user?.id]);
 
   const signUp = useCallback(
@@ -113,6 +140,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setProfile(null);
   }, []);
 
   const value: AuthContextValue = {
