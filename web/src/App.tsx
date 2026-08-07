@@ -21,6 +21,7 @@ import { BillingPage } from './pages/BillingPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { OnlineOrdersPage } from './pages/OnlineOrdersPage';
 import { PublicStorePage } from './pages/PublicStorePage';
 import { PendingApprovalPage } from './pages/PendingApprovalPage';
 import { NotConfiguredPage } from './pages/NotConfiguredPage';
@@ -34,6 +35,7 @@ function UserApp() {
       <Layout>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/online-orders" element={<OnlineOrdersPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/items" element={<ItemsPage />} />
           {inventoryEnabled ? (

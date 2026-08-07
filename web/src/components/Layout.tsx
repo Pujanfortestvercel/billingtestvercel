@@ -15,6 +15,7 @@ type NavItem = { to: string; label: string; icon: string; end?: boolean };
 const NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: '🏠', end: true },
   { to: '/billing', label: 'New Bill', icon: '🧾' },
+  { to: '/online-orders', label: 'Online Orders', icon: '🛍️' },
   { to: '/customers', label: 'Customers', icon: '👥' },
   { to: '/items', label: 'Items', icon: '📦' },
   { to: '/history', label: 'Bill History', icon: '🗂️' },
