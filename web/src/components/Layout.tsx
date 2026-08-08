@@ -179,8 +179,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <a
-              href="https://github.com/pujanbharwada/billing-app-final/releases/latest/download/BusinessSathi.apk"
-              download
+              href="/BusinessSathi.apk"
+              download="BusinessSathi.apk"
               className="btn btn-secondary btn-sm"
               style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
             >
