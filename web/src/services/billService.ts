@@ -41,9 +41,14 @@ export type BillWithItems = Bill & { items: BillItem[] };
 // collide. (For hard concurrency safety, add a UNIQUE(user_id, bill_number)
 // constraint in the DB and retry on conflict.)
 export async function getNextBillNumber(): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return `${BILL_NUMBER_PREFIX}1001`;
+
   const { data, error } = await supabase
     .from('bills')
     .select('bill_number')
+    .eq('user_id', uid)
     .order('created_at', { ascending: false })
     .limit(1000);
   if (error) throw new Error(error.message);
@@ -61,9 +66,14 @@ export async function getNextBillNumber(): Promise<string> {
 
 // All of the user's bills, newest first (capped for memory efficiency).
 export async function listBills(limit = 1000): Promise<Bill[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+
   const { data, error } = await supabase
     .from('bills')
     .select('*')
+    .eq('user_id', uid)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
@@ -80,9 +90,14 @@ export async function fetchBillsPage(params: {
   limit: number;
   offset: number;
 }): Promise<Bill[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+
   let query = supabase
     .from('bills')
     .select('*')
+    .eq('user_id', uid)
     .order('created_at', { ascending: false })
     .range(params.offset, params.offset + params.limit - 1);
   const s = params.search?.trim();
@@ -97,11 +112,16 @@ export async function fetchBillsPage(params: {
 
 // Bills whose customer name contains `query` (case-insensitive), newest first.
 export async function searchBills(query: string): Promise<Bill[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+
   const q = query.trim();
   if (!q) return listBills();
   const { data, error } = await supabase
     .from('bills')
     .select('*')
+    .eq('user_id', uid)
     .ilike('customer_name', `%${escapeLike(q)}%`)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
