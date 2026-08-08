@@ -1,5 +1,5 @@
 import React, { Component, ReactNode } from 'react';
-import { StyleSheet, Text, View, TouchState } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Button } from './Button';
 import { colors, fontSize, spacing } from '../../theme';
 
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: fontSize.md,
-    color: colors.muted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
