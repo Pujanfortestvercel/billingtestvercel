@@ -14,6 +14,7 @@ import type { Subscription } from '../types/models';
 import {
   computeStatus,
   getSubscription,
+  isAppUsable,
   type SubStatus,
 } from '../services/subscriptionService';
 
@@ -60,11 +61,13 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
     refresh();
   }, [refresh]);
 
+  const { status, daysLeft } = computeStatus(subscription);
+
   const value: SubscriptionContextValue = {
     subscription,
-    status: 'active',
-    daysLeft: -1,
-    isUsable: true,
+    status,
+    daysLeft,
+    isUsable: isAppUsable(subscription),
     inventoryEnabled: true, // Permanent 100% enabled for all users
     loading,
     refresh,
