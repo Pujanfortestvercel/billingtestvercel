@@ -109,12 +109,20 @@ export async function updateItem(
     default_rate?: number | null;
   } & ItemStockFields,
 ): Promise<void> {
-  const { error } = await supabase.from('items').update(fields).eq('id', id);
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return;
+
+  const { error } = await supabase.from('items').update(fields).eq('id', id).eq('user_id', uid);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  const { error } = await supabase.from('items').delete().eq('id', id);
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return;
+
+  const { error } = await supabase.from('items').delete().eq('id', id).eq('user_id', uid);
   if (error) throw new Error(error.message);
 }
 

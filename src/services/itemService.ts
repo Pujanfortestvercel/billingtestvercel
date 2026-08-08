@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// ITEM SERVICE — read/write the user's products (used for item autocomplete).
+// ITEM SERVICE — read/write the user's products with explicit user_id filtering.
 // ---------------------------------------------------------------------------
 import { supabase, escapeLike } from '../lib/supabase';
 import type { Item } from '../types/models';
@@ -18,6 +18,21 @@ export async function listItems(userId?: string): Promise<Item[]> {
   return (data ?? []) as Item[];
 }
 
+export async function getItemCount(userId?: string): Promise<number> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userId || userData.user?.id;
+  if (!uid) return 0;
+
+  const { count, error } = await supabase
+    .from('items')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', uid);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+// Paginated list for the Items screen — loads a PAGE at a time (scales to
+// thousands). Optional `search` filters by name CONTAINS, case-insensitive.
 export async function fetchItemsPage(params: {
   search?: string;
   limit: number;
@@ -41,6 +56,7 @@ export async function fetchItemsPage(params: {
   return (data ?? []) as Item[];
 }
 
+// Autocomplete: items that START WITH `query`, case-insensitive.
 export async function searchItems(query: string, limit = 8, userId?: string): Promise<Item[]> {
   const { data: userData } = await supabase.auth.getUser();
   const uid = userId || userData.user?.id;
@@ -59,6 +75,7 @@ export async function searchItems(query: string, limit = 8, userId?: string): Pr
   return (data ?? []) as Item[];
 }
 
+// Optional inventory attributes settable when creating/editing an item.
 export type ItemStockFields = {
   track_stock?: boolean;
   reorder_level?: number;
@@ -92,15 +109,24 @@ export async function updateItem(
     default_rate?: number | null;
   } & ItemStockFields,
 ): Promise<void> {
-  const { error } = await supabase.from('items').update(fields).eq('id', id);
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return;
+
+  const { error } = await supabase.from('items').update(fields).eq('id', id).eq('user_id', uid);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  const { error } = await supabase.from('items').delete().eq('id', id);
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return;
+
+  const { error } = await supabase.from('items').delete().eq('id', id).eq('user_id', uid);
   if (error) throw new Error(error.message);
 }
 
+// Billing helper: reuse an existing item or create it if new.
 export async function findOrCreateItem(
   userId: string,
   name: string,

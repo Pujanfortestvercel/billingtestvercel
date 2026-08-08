@@ -44,9 +44,14 @@ export async function listMovements(
   itemId: string,
   limit = 50,
 ): Promise<StockMovement[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+
   const { data, error } = await supabase
     .from('stock_movements')
     .select('*')
+    .eq('user_id', uid)
     .eq('item_id', itemId)
     .order('created_at', { ascending: false })
     .limit(limit);
