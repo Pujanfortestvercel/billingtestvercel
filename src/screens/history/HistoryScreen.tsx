@@ -237,7 +237,7 @@ export function HistoryScreen() {
                     {deletable ? (
                       <Button title="Delete" variant="danger" onPress={() => confirmDelete(item)} style={styles.detailBtn} />
                     ) : (
-                      <Text style={{ fontSize: fontSize.xs, color: colors.textMuted, fontStyle: 'italic', alignSelf: 'center', paddingHorizontal: spacing.xs }}>
+                      <Text style={{ fontSize: 11, color: colors.textMuted, fontStyle: 'italic', alignSelf: 'center', paddingHorizontal: spacing.xs }}>
                         🔒 Locked (&gt; 7d)
                       </Text>
                     )}
