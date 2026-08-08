@@ -70,29 +70,43 @@ export async function freezeUser(userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// PERMANENTLY DELETE an account and ALL its data.
 export async function deleteUserAccount(userId: string): Promise<void> {
-  await supabase.from('stock_movements').delete().eq('user_id', userId);
-  
+  const errors: string[] = [];
+
+  const tryDelete = async (table: string, col: string) => {
+    const { error } = await supabase.from(table).delete().eq(col, userId);
+    if (error) errors.push(`${table}: ${error.message}`);
+  };
+
+  // 1. Delete user data across all database tables (order matters for FK)
+  await tryDelete('stock_movements', 'user_id');
+
   const { data: userBills } = await supabase.from('bills').select('id').eq('user_id', userId);
   if (userBills && userBills.length > 0) {
     const billIds = userBills.map(b => b.id);
-    await supabase.from('bill_items').delete().in('bill_id', billIds);
+    const { error: biErr } = await supabase.from('bill_items').delete().in('bill_id', billIds);
+    if (biErr) errors.push(`bill_items: ${biErr.message}`);
   }
-  
-  await supabase.from('bills').delete().eq('user_id', userId);
-  await supabase.from('items').delete().eq('user_id', userId);
-  await supabase.from('customers').delete().eq('user_id', userId);
-  await supabase.from('settings').delete().eq('user_id', userId);
-  await supabase.from('subscriptions').delete().eq('user_id', userId);
+
+  await tryDelete('bills', 'user_id');
+  await tryDelete('items', 'user_id');
+  await tryDelete('customers', 'user_id');
+  await tryDelete('customizations', 'user_id');
+  await tryDelete('settings', 'user_id');
+  await tryDelete('subscriptions', 'user_id');
+
   const { error: profErr } = await supabase.from('profiles').delete().eq('id', userId);
+  if (profErr) errors.push(`profiles: ${profErr.message}`);
 
-  if (profErr) {
-    console.error('Profile delete error:', profErr);
-  }
-
+  // 2. Call RPC admin_delete_user to clean up auth user if permitted
   try {
     await supabase.rpc('admin_delete_user', { target_user: userId });
   } catch (e) {
     console.warn('RPC admin_delete_user info:', e);
+  }
+
+  if (errors.length > 0) {
+    console.warn('Partial delete errors:', errors);
   }
 }

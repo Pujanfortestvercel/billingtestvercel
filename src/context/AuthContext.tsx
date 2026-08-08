@@ -96,20 +96,31 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const userId = session?.user?.id;
     if (!userId) return;
 
+    let failCount = 0;
+    const MAX_FAILS = 3; // Only logout after 3 consecutive failures
+
     const heartbeat = setInterval(async () => {
       try {
         const p = await getMyProfile(userId);
         if (!p) {
-          console.warn('Account was deleted by Admin. Logging out immediately...');
+          failCount++;
+          if (failCount >= MAX_FAILS) {
+            console.warn('Account deleted by Admin. Logging out...');
+            await supabase.auth.signOut();
+            setSession(null);
+            setProfile(null);
+          }
+        } else {
+          failCount = 0; // Reset on success
+        }
+      } catch {
+        failCount++;
+        if (failCount >= MAX_FAILS) {
+          console.warn('Profile check failed repeatedly. Logging out...');
           await supabase.auth.signOut();
           setSession(null);
           setProfile(null);
         }
-      } catch (e) {
-        console.warn('Profile check failed. Logging out...');
-        await supabase.auth.signOut();
-        setSession(null);
-        setProfile(null);
       }
     }, 4000);
 

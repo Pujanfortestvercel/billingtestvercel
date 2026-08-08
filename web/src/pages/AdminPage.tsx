@@ -39,7 +39,7 @@ export function AdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     load();

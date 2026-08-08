@@ -11,6 +11,10 @@ import { getStoreConfig } from '../config/storeTypes';
 import { createOnlineOrder, type OnlineOrder } from '../services/onlineOrderService';
 import html2pdf from 'html2pdf.js';
 
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 type CartItem = {
   item: Item;
   qty: number;
@@ -66,6 +70,8 @@ export function PublicStorePage() {
   function addToCart(it: Item) {
     setCart(prev => {
       const existing = prev[it.id]?.qty || 0;
+      const maxStock = it.stock_qty ?? 0;
+      if (existing + 1 > maxStock) return prev; // Don't exceed available stock
       return {
         ...prev,
         [it.id]: { item: it, qty: existing + 1 },
@@ -172,7 +178,7 @@ export function PublicStorePage() {
     const itemRows = ord.items
       .map(
         i => `<tr>
-          <td>${i.item_name}</td>
+          <td>${escHtml(i.item_name)}</td>
           <td style="text-align:right">${i.qty}</td>
           <td style="text-align:right">${formatCurrency(i.rate)}</td>
           <td style="text-align:right">${formatCurrency(i.total)}</td>
@@ -200,9 +206,9 @@ export function PublicStorePage() {
       <body>
         <div class="head">
           <div>
-            <h1>${shopName}</h1>
-            ${phone ? `<div class="muted">Phone: ${phone}</div>` : ''}
-            ${address ? `<div class="muted">Address: ${address}</div>` : ''}
+            <h1>${escHtml(shopName)}</h1>
+            ${phone ? `<div class="muted">Phone: ${escHtml(phone)}</div>` : ''}
+            ${address ? `<div class="muted">Address: ${escHtml(address)}</div>` : ''}
           </div>
           <div style="text-align:right">
             <div style="font-size:16px; font-weight:bold">${ord.order_number}</div>
@@ -211,9 +217,9 @@ export function PublicStorePage() {
         </div>
 
         <div style="margin-top:14px; background:#F9FAFB; padding:10px; border-radius:6px; font-size:13px">
-          <div><strong>Billed To:</strong> ${ord.customer_name}</div>
-          ${ord.customer_phone ? `<div><strong>Phone:</strong> ${ord.customer_phone}</div>` : ''}
-          ${ord.customer_address ? `<div><strong>Address:</strong> ${ord.customer_address}</div>` : ''}
+          <div><strong>Billed To:</strong> ${escHtml(ord.customer_name)}</div>
+          ${ord.customer_phone ? `<div><strong>Phone:</strong> ${escHtml(ord.customer_phone || '')}</div>` : ''}
+          ${ord.customer_address ? `<div><strong>Address:</strong> ${escHtml(ord.customer_address || '')}</div>` : ''}
         </div>
 
         <table>
@@ -242,7 +248,7 @@ export function PublicStorePage() {
           <div style="text-align:center; width:180px">
             <div style="height:40px; border-bottom:1px dashed #6B7280"></div>
             <div style="font-size:12px; font-weight:bold; margin-top:4px">Authorized Signatory</div>
-            <div style="font-size:11px; color:#6B7280">For ${shopName}</div>
+            <div style="font-size:11px; color:#6B7280">For ${escHtml(shopName)}</div>
           </div>
         </div>
       </body>
@@ -362,6 +368,25 @@ export function PublicStorePage() {
                 📍 {address}
               </div>
             ) : null}
+            <a
+              href="https://github.com/pujanbharwada/billing-app-final/releases/latest/download/BusinessSathi.apk"
+              download
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 14px',
+                background: 'var(--primary)',
+                color: '#fff',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 12,
+                fontWeight: 700,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              📲 Download Our App
+            </a>
           </div>
         </div>
       </header>

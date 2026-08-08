@@ -133,6 +133,33 @@ export function StorefrontUnlockCard({ itemCount }: StorefrontUnlockCardProps) {
                 👁️ Preview Public Store →
               </a>
             </div>
+
+            {/* QR Code for Store Link */}
+            <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(storeUrl)}`}
+                alt="Store QR Code"
+                style={{ width: 120, height: 120, borderRadius: 8, border: '1px solid var(--border)' }}
+              />
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>📱 Your Store QR Code</div>
+                <div className="muted" style={{ fontSize: 12 }}>
+                  Print this QR code on your visiting card, shop board, or packaging. When scanned, customers go directly to your online catalog!
+                </div>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ marginTop: 8 }}
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(storeUrl)}`;
+                    link.download = 'store-qr-code.png';
+                    link.click();
+                  }}
+                >
+                  ⬇️ Download QR (High-Res)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
