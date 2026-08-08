@@ -372,8 +372,8 @@ export function PublicStorePage() {
             </div>
           </div>
           <a
-            href="https://github.com/pujanbharwada/billing-app-final/releases/latest/download/BusinessSathi.apk"
-            download
+            href="/BusinessSathi.apk"
+            download="BusinessSathi.apk"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
