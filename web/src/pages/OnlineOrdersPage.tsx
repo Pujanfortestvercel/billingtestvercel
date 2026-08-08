@@ -4,7 +4,7 @@
 // Shows incoming orders placed by customers through the public storefront!
 // Orders marked COMPLETED automatically self-delete after 5 minutes!
 // ---------------------------------------------------------------------------
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
@@ -13,6 +13,7 @@ import {
   fetchOnlineOrders,
   updateOrderStatus,
   deleteOnlineOrder,
+  deductInventoryForOrder,
   type OnlineOrder,
 } from '../services/onlineOrderService';
 import { formatCurrency, formatDateTime } from '../utils/format';
@@ -24,7 +25,7 @@ export function OnlineOrdersPage() {
   const [orders, setOrders] = useState<OnlineOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     if (!user) return;
     try {
       const data = await fetchOnlineOrders(user.id);
@@ -34,7 +35,7 @@ export function OnlineOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
 
   useEffect(() => {
     loadOrders();
@@ -50,7 +51,19 @@ export function OnlineOrdersPage() {
   async function handleStatusUpdate(orderId: string, status: 'pending' | 'accepted' | 'completed') {
     try {
       await updateOrderStatus(orderId, status);
-      if (status === 'completed') {
+
+      // Deduct inventory when order is accepted
+      if (status === 'accepted') {
+        const order = orders.find(o => o.id === orderId);
+        if (order && order.items.length > 0) {
+          await deductInventoryForOrder(
+            order.items.map(i => ({ item_id: i.item_id, qty: i.qty })),
+          );
+          toast('Order accepted! Inventory updated automatically. ✅📦', 'success');
+        } else {
+          toast('Order accepted! ✅', 'success');
+        }
+      } else if (status === 'completed') {
         toast('Order marked completed! It will auto-delete in 5 minutes. 🎉', 'success');
       } else {
         toast(`Order status updated to ${status} ✅`, 'success');
@@ -71,7 +84,13 @@ export function OnlineOrdersPage() {
     }
   }
 
-  function handleConvertToBill(ord: OnlineOrder) {
+  async function handleConvertToBill(ord: OnlineOrder) {
+    // Deduct inventory for the order items
+    if (ord.items.length > 0) {
+      await deductInventoryForOrder(
+        ord.items.map(i => ({ item_id: i.item_id, qty: i.qty })),
+      );
+    }
     // Mark order completed & navigate to billing
     updateOrderStatus(ord.id, 'completed');
     navigate('/billing', {

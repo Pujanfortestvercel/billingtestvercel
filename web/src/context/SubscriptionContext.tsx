@@ -66,7 +66,7 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
     daysLeft: -1,
     isUsable: true,
     inventoryEnabled: true, // Permanent 100% enabled for all users
-    loading: false,
+    loading,
     refresh,
   };
 

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// ONLINE ORDERS SERVICE
+// ONLINE ORDERS SERVICE (Mobile App Sync)
 // ---------------------------------------------------------------------------
 import { supabase } from '../lib/supabase';
 
@@ -124,7 +124,6 @@ export async function deleteOnlineOrder(orderId: string): Promise<void> {
 
 // Fetch shopkeeper's online orders (Auto-deletes orders completed > 5 mins ago)
 export async function fetchOnlineOrders(userId: string): Promise<OnlineOrder[]> {
-  // Fetch only bills that have extra JSON (online orders), not ALL bills
   const { data: bills, error } = await supabase
     .from('bills')
     .select('*')
@@ -235,9 +234,8 @@ export async function deductInventoryForOrder(
 ): Promise<void> {
   const results = await Promise.allSettled(
     items
-      .filter(it => it.item_id) // Only deduct for items with valid IDs
+      .filter(it => it.item_id)
       .map(async it => {
-        // Directly decrement stock_qty on the item
         const { data: item } = await supabase
           .from('items')
           .select('stock_qty, track_stock')
@@ -252,7 +250,6 @@ export async function deductInventoryForOrder(
             .update({ stock_qty: newStock })
             .eq('id', it.item_id);
 
-          // Also log stock movement if track_stock is enabled
           if (item.track_stock) {
             const { data: itemFull } = await supabase
               .from('items')

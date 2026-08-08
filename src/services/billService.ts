@@ -45,7 +45,7 @@ export async function getNextBillNumber(): Promise<string> {
     .from('bills')
     .select('bill_number')
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(1000);
   if (error) throw new Error(error.message);
 
   let highest = 1000;
