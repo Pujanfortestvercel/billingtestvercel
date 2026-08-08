@@ -333,61 +333,64 @@ export function PublicStorePage() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         }}
       >
-        <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 14 }}>
-          {shopSettings?.logo_url ? (
-            <img
-              src={shopSettings.logo_url}
-              alt="logo"
-              style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '1px solid var(--border)' }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 12,
-                background: 'var(--primary-soft)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 28,
-              }}
-            >
-              {store.emoji}
-            </div>
-          )}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontSize: 20, margin: 0, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {shopName}
-            </h1>
-            <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
-              {store.label} {phone ? `· 📞 ${phone}` : ''}
-            </div>
-            {address ? (
-              <div className="muted" style={{ fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                📍 {address}
+        <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 200 }}>
+            {shopSettings?.logo_url ? (
+              <img
+                src={shopSettings.logo_url}
+                alt="logo"
+                style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '1px solid var(--border)' }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 12,
+                  background: 'var(--primary-soft)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28,
+                }}
+              >
+                {store.emoji}
               </div>
-            ) : null}
-            <a
-              href="https://github.com/pujanbharwada/billing-app-final/releases/latest/download/BusinessSathi.apk"
-              download
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 14px',
-                background: 'var(--primary)',
-                color: '#fff',
-                borderRadius: 'var(--radius-md)',
-                fontSize: 12,
-                fontWeight: 700,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              📲 Download Our App
-            </a>
+            )}
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ fontSize: 20, margin: 0, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {shopName}
+              </h1>
+              <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
+                {store.label} {phone ? `· 📞 ${phone}` : ''}
+              </div>
+              {address ? (
+                <div className="muted" style={{ fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  📍 {address}
+                </div>
+              ) : null}
+            </div>
           </div>
+          <a
+            href="https://github.com/pujanbharwada/billing-app-final/releases/latest/download/BusinessSathi.apk"
+            download
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 16px',
+              background: 'var(--primary)',
+              color: '#fff',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 13,
+              fontWeight: 800,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+            }}
+          >
+            📲 Download Our App
+          </a>
         </div>
       </header>
 

@@ -177,11 +177,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ☰
             </button>
           </div>
-          <Button
-            title="+ New Bill"
-            small
-            onClick={() => navigate('/billing')}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <a
+              href="https://github.com/pujanbharwada/billing-app-final/releases/latest/download/BusinessSathi.apk"
+              download
+              className="btn btn-secondary btn-sm"
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+            >
+              📲 Download Our App
+            </a>
+            <Button
+              title="+ New Bill"
+              small
+              onClick={() => navigate('/billing')}
+            />
+          </div>
         </header>
 
         <ExpiryReminder />
