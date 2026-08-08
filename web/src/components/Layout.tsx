@@ -26,6 +26,7 @@ const NAV: NavItem[] = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { settings, store } = useSettings();
+  const { status, daysLeft } = useSubscription();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -108,6 +109,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
       ))}
 
       <div style={{ flex: 1 }} />
+
+      {/* 21-Day Free Trial / Subscription Badge */}
+      <div
+        style={{
+          background: status === 'trial' ? 'var(--warning-soft)' : status === 'active' ? 'var(--success-soft)' : 'var(--danger-soft)',
+          border: `1px solid ${status === 'trial' ? 'var(--warning)' : status === 'active' ? 'var(--success)' : 'var(--danger)'}`,
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: 12,
+          fontSize: 12,
+        }}
+      >
+        <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, color: status === 'trial' ? 'var(--warning)' : status === 'active' ? 'var(--success)' : 'var(--danger)' }}>
+          {status === 'trial' ? '🎁 21-Day Free Trial' : status === 'active' ? '✨ Active Plan' : '⚠️ Trial Expired'}
+        </div>
+        <div className="muted" style={{ fontSize: 11, marginTop: 3 }}>
+          {status === 'trial'
+            ? `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining`
+            : daysLeft === -1
+            ? 'Permanent Access'
+            : `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining`}
+        </div>
+      </div>
 
       <div
         style={{
