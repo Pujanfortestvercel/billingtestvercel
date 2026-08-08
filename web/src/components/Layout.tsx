@@ -58,10 +58,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <img
             src={settings.logo_url}
             alt=""
-            style={{ width: 30, height: 30, borderRadius: 7, objectFit: 'cover' }}
+            style={{ width: 32, height: 32, borderRadius: 7, objectFit: 'cover' }}
           />
         ) : (
-          <span style={{ fontSize: 26 }}>{store.emoji}</span>
+          <img
+            src="/logo.png"
+            alt="BusinessSathi Logo"
+            style={{ height: 32, width: 'auto', objectFit: 'contain' }}
+          />
         )}
         <div style={{ minWidth: 0 }}>
           <strong

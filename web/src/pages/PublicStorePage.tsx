@@ -342,20 +342,11 @@ export function PublicStorePage() {
                 style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '1px solid var(--border)' }}
               />
             ) : (
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 12,
-                  background: 'var(--primary-soft)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                }}
-              >
-                {store.emoji}
-              </div>
+              <img
+                src="/logo.png"
+                alt="BusinessSathi"
+                style={{ height: 48, width: 'auto', objectFit: 'contain' }}
+              />
             )}
             <div style={{ minWidth: 0 }}>
               <h1 style={{ fontSize: 20, margin: 0, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
