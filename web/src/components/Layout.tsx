@@ -278,11 +278,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               📲 {t('downloadOurApp')}
             </a>
-            <Button
-              title={`+ ${t('newBill')}`}
-              small
-              onClick={() => navigate('/billing')}
-            />
           </div>
         </header>
 
