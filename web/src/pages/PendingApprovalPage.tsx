@@ -28,8 +28,14 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
   useEffect(() => {
     if (!user?.id) return;
     getUserPendingPayment(user.id)
-      .then(setPendingPayment)
-      .catch(() => setPendingPayment(null))
+      .then(p => {
+        setPendingPayment(p);
+        if (!p) setSubmittedSuccess(false);
+      })
+      .catch(() => {
+        setPendingPayment(null);
+        setSubmittedSuccess(false);
+      })
       .finally(() => setLoading(false));
   }, [user?.id]);
 
@@ -40,6 +46,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
       if (user?.id) {
         const p = await getUserPendingPayment(user.id);
         setPendingPayment(p);
+        if (!p) setSubmittedSuccess(false);
       }
     } finally {
       setChecking(false);
@@ -71,6 +78,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
 
   const isExpired = status === 'expired';
+  const isActive = status === 'active';
 
   if (loading) return <Spinner text="Checking account status…" />;
 
@@ -82,15 +90,20 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
         </div>
       ) : null}
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: 52 }}>{isExpired ? '⏳' : forceShow ? '⭐' : '🔒'}</div>
+        <div style={{ fontSize: 52 }}>{isExpired ? '⏳' : isActive ? '✨' : '🔒'}</div>
         <h1 style={{ margin: '8px 0 4px' }}>
-          {isExpired ? '21-Day Free Trial Expired' : forceShow ? 'Upgrade BusinessSathi Plan' : 'Account Pending Activation'}
+          {isExpired ? '21-Day Free Trial Expired' : isActive ? 'Upgrade or Extend Subscription' : 'Account Pending Activation'}
         </h1>
         <p className="muted" style={{ lineHeight: 1.5, margin: 0 }}>
           {isExpired ? (
             <>
               Your 21-day trial for <strong>{user?.email}</strong> has ended.
               Select a plan below to upgrade and continue using BusinessSathi.
+            </>
+          ) : isActive ? (
+            <>
+              Your account <strong>{user?.email}</strong> is currently active.
+              Select a plan below to extend your subscription further.
             </>
           ) : (
             <>
@@ -100,6 +113,18 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
           )}
         </p>
       </div>
+
+      {/* Active Plan Green Confirmation Banner */}
+      {isActive && !pendingPayment && !submittedSuccess ? (
+        <Card style={{ textAlign: 'center', padding: 18, marginBottom: 20, borderColor: 'var(--success)', background: 'var(--success-soft)' }}>
+          <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--success)' }}>
+            ✨ Your Subscription is Active!
+          </div>
+          <p className="muted" style={{ margin: '4px 0 0', fontSize: 13 }}>
+            Thank you for being a BusinessSathi partner. You can extend your plan below anytime.
+          </p>
+        </Card>
+      ) : null}
 
       {pendingPayment || submittedSuccess ? (
         <Card style={{ textAlign: 'center', padding: 24, marginBottom: 20, borderColor: 'var(--warning)', background: 'var(--warning-soft)' }}>
