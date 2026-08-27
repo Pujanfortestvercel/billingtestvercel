@@ -126,7 +126,8 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
         </Card>
       ) : null}
 
-      {pendingPayment || submittedSuccess ? (
+      {/* Pending Payment Box — only show when account is NOT active yet */}
+      {(pendingPayment || submittedSuccess) && !isActive ? (
         <Card style={{ textAlign: 'center', padding: 24, marginBottom: 20, borderColor: 'var(--warning)', background: 'var(--warning-soft)' }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>⏳</div>
           <h3 style={{ marginTop: 0, marginBottom: 6 }}>Payment Notification Sent!</h3>
