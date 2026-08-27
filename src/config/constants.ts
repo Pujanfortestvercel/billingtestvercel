@@ -13,3 +13,7 @@ export const TRIAL_DAYS = 21;
 
 // Bill numbers will look like "INV-1024".
 export const BILL_NUMBER_PREFIX = 'INV-';
+
+// Platform Admin UPI Payment Details
+export const ADMIN_UPI_ID = 'bharwada.k.pujan@okaxis';
+export const ADMIN_NAME = 'Pujan Bharwada';
