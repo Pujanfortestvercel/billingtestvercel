@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { Button, Card, Spinner } from '../components/UI';
@@ -11,9 +12,10 @@ import {
 const ADMIN_UPI_ID = 'pujanbharwada1@gmail.com';
 const ADMIN_NAME = 'BusinessSathi Admin';
 
-export function PendingApprovalPage() {
+export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
   const { user, signOut } = useAuth();
   const { refresh, status } = useSubscription();
+  const navigate = useNavigate();
 
   const [selectedPlanKey, setSelectedPlanKey] = useState<string>('1y');
   const [pendingPayment, setPendingPayment] = useState<any>(null);
@@ -75,11 +77,16 @@ export function PendingApprovalPage() {
   if (loading) return <Spinner text="Checking account status…" />;
 
   return (
-    <div style={{ maxWidth: 650, margin: '40px auto', padding: '0 16px' }}>
+    <div style={{ maxWidth: 650, margin: '20px auto', padding: '0 16px' }}>
+      {forceShow ? (
+        <div style={{ marginBottom: 16 }}>
+          <Button title="← Back to Dashboard" variant="ghost" small onClick={() => navigate('/')} />
+        </div>
+      ) : null}
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: 52 }}>{isExpired ? '⏳' : '🔒'}</div>
+        <div style={{ fontSize: 52 }}>{isExpired ? '⏳' : forceShow ? '⭐' : '🔒'}</div>
         <h1 style={{ margin: '8px 0 4px' }}>
-          {isExpired ? '21-Day Free Trial Expired' : 'Account Pending Activation'}
+          {isExpired ? '21-Day Free Trial Expired' : forceShow ? 'Upgrade BusinessSathi Plan' : 'Account Pending Activation'}
         </h1>
         <p className="muted" style={{ lineHeight: 1.5, margin: 0 }}>
           {isExpired ? (

@@ -42,6 +42,7 @@ function UserApp() {
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/upgrade" element={<PendingApprovalPage forceShow />} />
           <Route path="/store/:userId" element={<PublicStorePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
