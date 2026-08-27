@@ -69,7 +69,6 @@ export function DashboardPage() {
             Welcome back, {user?.email}
           </p>
         </div>
-        <Button title={`🧾 + ${t('newBill')}`} variant="primary" onClick={() => navigate('/billing')} />
       </div>
 
       {/* Expiry reminders (medical stores) */}
