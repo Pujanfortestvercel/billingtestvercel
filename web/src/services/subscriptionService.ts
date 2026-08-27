@@ -190,3 +190,11 @@ export async function rejectSubscriptionRequest(paymentId: string): Promise<void
     await supabase.from('subscription_payments').update({ status: 'rejected' }).eq('id', paymentId);
   }
 }
+
+export async function clearAllPendingSubscriptionRequests(): Promise<void> {
+  try {
+    await supabase.from('subscription_payments').delete().eq('status', 'pending');
+  } catch {
+    await supabase.from('subscription_payments').update({ status: 'rejected' }).eq('status', 'pending');
+  }
+}
