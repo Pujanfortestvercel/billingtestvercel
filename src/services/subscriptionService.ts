@@ -106,13 +106,20 @@ export async function getUserPendingPayment(userId: string) {
 
 export async function getPendingSubscriptionRequests() {
   try {
-    const { data, error } = await supabase
+    const { data: payments, error } = await supabase
       .from('subscription_payments')
       .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
-    if (error) return [];
-    return data ?? [];
+    if (error || !payments || payments.length === 0) return [];
+
+    const { data: activeSubs } = await supabase
+      .from('subscriptions')
+      .select('user_id')
+      .eq('status', 'active');
+
+    const activeUserIds = new Set((activeSubs || []).map(s => s.user_id));
+    return payments.filter(p => !activeUserIds.has(p.user_id));
   } catch {
     return [];
   }
