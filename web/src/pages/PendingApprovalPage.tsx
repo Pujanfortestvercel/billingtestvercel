@@ -165,17 +165,13 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
 
             <div style={{ margin: '16px 0', display: 'flex', justifyContent: 'center' }}>
               <img
-                src="/scanner.png"
-                onError={(e) => {
-                  // Fallback to generated QR if scanner image fails to load
-                  (e.target as HTMLImageElement).src = qrUrl;
-                }}
-                alt="GPay QR Code Scanner"
+                src={qrUrl}
+                alt="Dynamic UPI QR Code"
                 style={{
                   width: 220,
-                  height: 'auto',
+                  height: 220,
                   borderRadius: 12,
-                  border: '1px solid var(--border)',
+                  border: '2px solid var(--primary)',
                   padding: 10,
                   background: '#fff',
                 }}
