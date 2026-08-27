@@ -9,8 +9,8 @@ import {
   getUserPendingPayment,
 } from '../services/subscriptionService';
 
-const ADMIN_UPI_ID = 'pujanbharwada1@gmail.com';
-const ADMIN_NAME = 'BusinessSathi Admin';
+const ADMIN_UPI_ID = 'bharwada.k.pujan@okaxis';
+const ADMIN_NAME = 'Pujan Bharwada';
 
 export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
   const { user, signOut } = useAuth();
@@ -156,31 +156,35 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
             </div>
           </Card>
 
-          {/* Payment Instructions & Dynamic QR Code */}
+          {/* Payment Instructions & Official GPay QR Code */}
           <Card style={{ marginBottom: 20, textAlign: 'center' }}>
             <h3 style={{ marginTop: 0, marginBottom: 4 }}>2. Pay via Direct UPI (0% Fee)</h3>
             <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
-              Scan QR code using GPay, PhonePe, or Paytm for <strong>₹{currentPlan.price}</strong>
+              Scan official GPay QR code below for <strong>₹{currentPlan.price}</strong>
             </p>
 
             <div style={{ margin: '16px 0', display: 'flex', justifyContent: 'center' }}>
               <img
-                src={qrUrl}
-                alt="UPI QR Code"
+                src="/scanner.png"
+                onError={(e) => {
+                  // Fallback to generated QR if scanner image fails to load
+                  (e.target as HTMLImageElement).src = qrUrl;
+                }}
+                alt="GPay QR Code Scanner"
                 style={{
-                  width: 210,
-                  height: 210,
+                  width: 220,
+                  height: 'auto',
                   borderRadius: 12,
                   border: '1px solid var(--border)',
-                  padding: 8,
+                  padding: 10,
                   background: '#fff',
                 }}
               />
             </div>
 
-            <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
               <span className="muted">UPI ID: </span>
-              <strong style={{ userSelect: 'all' }}>{ADMIN_UPI_ID}</strong>
+              <strong style={{ userSelect: 'all', color: 'var(--primary)' }}>{ADMIN_UPI_ID}</strong>
             </div>
 
             {/* Mobile 1-Tap App Launchers */}
