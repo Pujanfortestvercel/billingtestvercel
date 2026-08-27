@@ -45,8 +45,12 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
       await refresh();
       if (user?.id) {
         const p = await getUserPendingPayment(user.id);
-        setPendingPayment(p);
-        if (!p) setSubmittedSuccess(false);
+        if (p && status !== 'active') {
+          setPendingPayment(p);
+        } else {
+          setPendingPayment(null);
+          setSubmittedSuccess(false);
+        }
       }
     } finally {
       setChecking(false);
