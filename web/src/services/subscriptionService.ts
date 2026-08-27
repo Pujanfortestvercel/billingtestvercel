@@ -16,13 +16,15 @@ export const PLANS: {
   label: string;
   days: number | null;
   status: 'trial' | 'active';
+  price: number;
+  popular?: boolean;
 }[] = [
-  { key: 'trial', label: '21-day free trial', days: 21, status: 'trial' },
-  { key: '1m', label: '1 month', days: 30, status: 'active' },
-  { key: '3m', label: '3 months', days: 90, status: 'active' },
-  { key: '6m', label: '6 months', days: 180, status: 'active' },
-  { key: '1y', label: '1 year', days: 365, status: 'active' },
-  { key: 'permanent', label: 'Permanent', days: null, status: 'active' },
+  { key: 'trial', label: '21-Day Free Trial', days: 21, status: 'trial', price: 0 },
+  { key: '1m', label: '1 Month Plan', days: 30, status: 'active', price: 299 },
+  { key: '3m', label: '3 Months Plan', days: 90, status: 'active', price: 799 },
+  { key: '6m', label: '6 Months Plan', days: 180, status: 'active', price: 1499 },
+  { key: '1y', label: '1 Year Plan', days: 365, status: 'active', price: 2499, popular: true },
+  { key: 'permanent', label: 'Permanent Plan', days: null, status: 'active', price: 4999 },
 ];
 
 export function planLabel(key: string | null | undefined): string {
@@ -83,5 +85,88 @@ export async function activateSubscription(userId: string): Promise<void> {
     .from('subscriptions')
     .update({ status: 'active', updated_at: new Date().toISOString() })
     .eq('user_id', userId);
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// FREE SUBSCRIPTION PAYMENTS — 1-tap request & Admin 1-click approval
+// ---------------------------------------------------------------------------
+
+export async function submitSubscriptionPayment(
+  userId: string,
+  userEmail: string,
+  planKey: string,
+  amount: number,
+): Promise<void> {
+  const { error } = await supabase.from('subscription_payments').insert({
+    user_id: userId,
+    user_email: userEmail,
+    plan_key: planKey,
+    amount: amount,
+    status: 'pending',
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function getUserPendingPayment(userId: string) {
+  const { data, error } = await supabase
+    .from('subscription_payments')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+export async function getPendingSubscriptionRequests() {
+  const { data, error } = await supabase
+    .from('subscription_payments')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function approveSubscriptionRequest(
+  paymentId: string,
+  userId: string,
+  planKey: string,
+): Promise<void> {
+  const planObj = PLANS.find(p => p.key === planKey);
+  const days = planObj?.days ?? null;
+
+  let trialEndIso: string | null = null;
+  if (days !== null) {
+    trialEndIso = new Date(Date.now() + days * 86400000).toISOString();
+  }
+
+  // 1. Activate subscription table row
+  const { error: subErr } = await supabase
+    .from('subscriptions')
+    .update({
+      status: 'active',
+      plan: planKey,
+      trial_end: trialEndIso,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (subErr) throw new Error(subErr.message);
+
+  // 2. Mark payment request approved
+  const { error: payErr } = await supabase
+    .from('subscription_payments')
+    .update({ status: 'approved' })
+    .eq('id', paymentId);
+  if (payErr) throw new Error(payErr.message);
+}
+
+export async function rejectSubscriptionRequest(paymentId: string): Promise<void> {
+  const { error } = await supabase
+    .from('subscription_payments')
+    .update({ status: 'rejected' })
+    .eq('id', paymentId);
   if (error) throw new Error(error.message);
 }

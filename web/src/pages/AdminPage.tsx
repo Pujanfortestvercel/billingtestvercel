@@ -21,6 +21,9 @@ import {
   planLabel,
   PLANS,
   type PlanKey,
+  getPendingSubscriptionRequests,
+  approveSubscriptionRequest,
+  rejectSubscriptionRequest,
 } from '../services/subscriptionService';
 import { formatDate } from '../utils/format';
 import { APP_NAME } from '../config/constants';
@@ -29,11 +32,13 @@ export function AdminPage() {
   const { user, signOut } = useAuth();
   const { toast, confirm } = useToast();
   const [rows, setRows] = useState<AdminUserRow[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
       setRows(await listAllUsers());
+      setPendingRequests(await getPendingSubscriptionRequests());
     } catch (e: any) {
       toast(e?.message ?? 'Could not load accounts.', 'error');
     } finally {
@@ -52,6 +57,26 @@ export function AdminPage() {
       toast(msg, 'success');
     } catch (e: any) {
       toast(e?.message ?? 'Could not update.', 'error');
+    }
+  }
+
+  async function handleApproveRequest(req: any) {
+    try {
+      await approveSubscriptionRequest(req.id, req.user_id, req.plan_key);
+      await load();
+      toast(`Approved ${req.user_email} for ${planLabel(req.plan_key)} ✅`, 'success');
+    } catch (e: any) {
+      toast(e?.message ?? 'Could not approve request.', 'error');
+    }
+  }
+
+  async function handleRejectRequest(reqId: string) {
+    try {
+      await rejectSubscriptionRequest(reqId);
+      await load();
+      toast('Subscription request rejected.', 'success');
+    } catch (e: any) {
+      toast(e?.message ?? 'Could not reject request.', 'error');
     }
   }
 
@@ -81,9 +106,58 @@ export function AdminPage() {
         <Button title="Log out" variant="danger" small onClick={signOut} />
       </div>
       <p className="muted">
-        Assign a plan to approve an account, freeze to suspend, or delete it. You:{' '}
-        {user?.email}
+        Manage business accounts, approve subscription payment requests, or suspend access. Admin: {user?.email}
       </p>
+
+      {/* Pending Subscription Payment Requests */}
+      {pendingRequests.length > 0 ? (
+        <Card style={{ marginBottom: 24, borderColor: 'var(--primary)', background: 'var(--primary-soft)' }}>
+          <h3 style={{ marginTop: 0, color: 'var(--primary)', marginBottom: 8 }}>
+            🔔 Pending Subscription Requests ({pendingRequests.length})
+          </h3>
+          <p className="muted" style={{ marginTop: 0, marginBottom: 12, fontSize: 13 }}>
+            Shopkeepers who tapped "I Have Paid" for a plan upgrade. Check your UPI app and click Approve.
+          </p>
+          {pendingRequests.map(req => (
+            <div
+              key={req.id}
+              className="row spread"
+              style={{
+                background: 'var(--surface)',
+                padding: 12,
+                borderRadius: 8,
+                border: '1px solid var(--border)',
+                marginBottom: 8,
+                flexWrap: 'wrap',
+                gap: 10,
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: 15 }}>{req.user_email}</strong>
+                <div style={{ fontSize: 13, marginTop: 2 }}>
+                  Requested Plan: <strong style={{ color: 'var(--primary)' }}>{planLabel(req.plan_key)} (₹{req.amount})</strong>
+                </div>
+                <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                  Requested on {formatDate(req.created_at)}
+                </div>
+              </div>
+              <div className="row gap-sm">
+                <Button
+                  title="Approve ✅"
+                  small
+                  onClick={() => handleApproveRequest(req)}
+                />
+                <Button
+                  title="Reject ❌"
+                  variant="danger"
+                  small
+                  onClick={() => handleRejectRequest(req.id)}
+                />
+              </div>
+            </div>
+          ))}
+        </Card>
+      ) : null}
 
       {loading ? (
         <Spinner />

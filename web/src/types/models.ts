@@ -26,9 +26,18 @@ export interface Subscription {
   trial_end: string | null; // when access ends (NULL = permanent / unlimited)
   status: 'frozen' | 'trial' | 'active' | 'expired';
   plan?: string | null; // 'trial' | '1m' | '3m' | '6m' | '1y' | 'permanent'
-  // Inventory is an admin-gated feature (migration 004): only the admin can
-  // turn it on for a user; the user can read this but not change it.
   inventory_enabled?: boolean;
+}
+
+// Tracks incoming subscription payment requests from shopkeepers.
+export interface SubscriptionPayment {
+  id: string;
+  user_id: string;
+  user_email: string;
+  plan_key: string;
+  amount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
 }
 
 // A customer/account that the shopkeeper bills.
