@@ -6,31 +6,31 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 import { APP_NAME } from '../config/constants';
 import { Button } from './UI';
 import { ExpiryReminder } from './ExpiryReminder';
 
-type NavItem = { to: string; label: string; icon: string; end?: boolean };
+type NavItem = { to: string; labelKey: string; icon: string; end?: boolean };
 
 const NAV: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: '🏠', end: true },
-  { to: '/billing', label: 'New Bill', icon: '🧾' },
-  { to: '/online-orders', label: 'Online Orders', icon: '🛍️' },
-  { to: '/customers', label: 'Customers', icon: '👥' },
-  { to: '/items', label: 'Items', icon: '📦' },
-  { to: '/inventory', label: 'Inventory', icon: '📊' },
-  { to: '/history', label: 'Bill History', icon: '🗂️' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/', labelKey: 'dashboard', icon: '🏠', end: true },
+  { to: '/billing', labelKey: 'newBill', icon: '🧾' },
+  { to: '/online-orders', labelKey: 'onlineOrders', icon: '🛍️' },
+  { to: '/customers', labelKey: 'customers', icon: '👥' },
+  { to: '/items', labelKey: 'items', icon: '📦' },
+  { to: '/inventory', labelKey: 'inventory', icon: '📊' },
+  { to: '/history', labelKey: 'billHistory', icon: '🗂️' },
+  { to: '/settings', labelKey: 'settings', icon: '⚙️' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { settings, store } = useSettings();
   const { status, daysLeft } = useSubscription();
+  const { lang, setLang, t, languages } = useLanguage();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const navItems = NAV;
 
   const sidebar = (
     <aside
@@ -86,7 +86,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {navItems.map(n => (
+      {NAV.map(n => (
         <NavLink
           key={n.to}
           to={n.to}
@@ -104,7 +104,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         >
           <span style={{ fontSize: 18 }}>{n.icon}</span>
-          {n.label}
+          {t(n.labelKey)}
         </NavLink>
       ))}
 
@@ -122,14 +122,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, color: status === 'trial' ? 'var(--warning)' : status === 'active' ? 'var(--success)' : 'var(--danger)' }}>
-          {status === 'trial' ? '🎁 21-Day Free Trial' : status === 'active' ? '✨ Active Plan' : '⚠️ Trial Expired'}
+          {status === 'trial' ? `🎁 ${t('freeTrial')}` : status === 'active' ? '✨ Active Plan' : '⚠️ Trial Expired'}
         </div>
         <div className="muted" style={{ fontSize: 11, marginTop: 3 }}>
           {status === 'trial'
-            ? `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining`
+            ? `${daysLeft} ${t('daysRemaining')}`
             : daysLeft === -1
             ? 'Permanent Access'
-            : `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} remaining`}
+            : `${daysLeft} ${t('daysRemaining')}`}
         </div>
       </div>
 
@@ -141,7 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="muted" style={{ marginBottom: 4 }}>
-          Signed in as
+          {t('signedInAs')}
         </div>
         <div
           style={{
@@ -154,7 +154,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {user?.email}
         </div>
         <div style={{ marginTop: 12 }}>
-          <Button title="Log out" variant="ghost" small block onClick={signOut} />
+          <Button title={t('logOut')} variant="ghost" small block onClick={signOut} />
         </div>
       </div>
     </aside>
@@ -206,16 +206,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Language Picker Dropdown */}
+            <select
+              value={lang}
+              onChange={e => setLang(e.target.value as any)}
+              style={{
+                height: 36,
+                padding: '0 10px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              {languages.map(l => (
+                <option key={l.key} value={l.key}>
+                  {l.flag} {l.nativeName}
+                </option>
+              ))}
+            </select>
+
             <a
               href="/BusinessSathi.apk"
               download="BusinessSathi.apk"
               className="btn btn-secondary btn-sm"
               style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
             >
-              📲 Download Our App
+              📲 {t('downloadOurApp')}
             </a>
             <Button
-              title="+ New Bill"
+              title={`+ ${t('newBill')}`}
               small
               onClick={() => navigate('/billing')}
             />

@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../components/Toast';
 import { Button, Card, Spinner, TextField } from '../components/UI';
 import { STORE_TYPE_LIST, type StoreType } from '../config/storeTypes';
@@ -35,6 +36,7 @@ function fileToLogoDataUrl(file: File): Promise<string> {
 
 export function SettingsPage() {
   const { settings, store, loading, save } = useSettings();
+  const { lang, setLang, t, languages } = useLanguage();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -86,7 +88,48 @@ export function SettingsPage() {
 
   return (
     <div style={{ maxWidth: 680 }}>
-      <h1 style={{ marginTop: 0 }}>Settings</h1>
+      <h1 style={{ marginTop: 0 }}>{t('settings')}</h1>
+
+      {/* Language Selection Card */}
+      <Card style={{ marginBottom: 16 }}>
+        <h3 style={{ marginTop: 0 }}>🌐 {t('language')}</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          {t('selectLanguageDesc')}
+        </p>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: 10,
+          }}
+        >
+          {languages.map(l => {
+            const active = l.key === lang;
+            return (
+              <button
+                key={l.key}
+                type="button"
+                onClick={() => setLang(l.key)}
+                style={{
+                  textAlign: 'center',
+                  padding: 12,
+                  borderRadius: 'var(--radius-md)',
+                  border: `2px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
+                  background: active ? 'var(--primary-soft)' : 'var(--surface)',
+                  cursor: 'pointer',
+                  color: 'var(--text)',
+                }}
+              >
+                <div style={{ fontSize: 24 }}>{l.flag}</div>
+                <div style={{ fontWeight: 700, marginTop: 4 }}>{l.nativeName}</div>
+                <div className="muted" style={{ fontSize: 11 }}>
+                  {l.label}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Store type */}
       <Card style={{ marginBottom: 16 }}>
