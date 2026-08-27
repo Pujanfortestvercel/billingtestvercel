@@ -61,21 +61,25 @@ export function AdminPage() {
   }
 
   async function handleApproveRequest(req: any) {
+    setPendingRequests(prev => prev.filter(r => r.id !== req.id));
     try {
       await approveSubscriptionRequest(req.id, req.user_id, req.plan_key);
       await load();
       toast(`Approved ${req.user_email} for ${planLabel(req.plan_key)} ✅`, 'success');
     } catch (e: any) {
+      await load();
       toast(e?.message ?? 'Could not approve request.', 'error');
     }
   }
 
   async function handleRejectRequest(reqId: string) {
+    setPendingRequests(prev => prev.filter(r => r.id !== reqId));
     try {
       await rejectSubscriptionRequest(reqId);
       await load();
       toast('Subscription request rejected.', 'success');
     } catch (e: any) {
+      await load();
       toast(e?.message ?? 'Could not reject request.', 'error');
     }
   }
