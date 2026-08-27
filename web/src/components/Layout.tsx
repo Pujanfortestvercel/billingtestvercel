@@ -121,8 +121,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           fontSize: 12,
         }}
       >
-        <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, color: status === 'trial' ? 'var(--warning)' : status === 'active' ? 'var(--success)' : 'var(--danger)' }}>
-          {status === 'trial' ? `🎁 ${t('freeTrial')}` : status === 'active' ? '✨ Active Plan' : '⚠️ Trial Expired'}
+        <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: status === 'trial' ? 'var(--warning)' : status === 'active' ? 'var(--success)' : 'var(--danger)' }}>
+          <span>{status === 'trial' ? `🎁 ${t('freeTrial')}` : status === 'active' ? '✨ Active Plan' : '⚠️ Trial Expired'}</span>
         </div>
         <div className="muted" style={{ fontSize: 11, marginTop: 3 }}>
           {status === 'trial'
@@ -131,6 +131,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
             ? 'Permanent Access'
             : `${daysLeft} ${t('daysRemaining')}`}
         </div>
+        <button
+          onClick={() => {
+            setDrawerOpen(false);
+            navigate('/upgrade');
+          }}
+          style={{
+            marginTop: 8,
+            width: '100%',
+            padding: '6px 10px',
+            borderRadius: 6,
+            border: 'none',
+            background: 'var(--primary)',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 12,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+          }}
+        >
+          ⚡ Upgrade Plan
+        </button>
       </div>
 
       <div
@@ -228,6 +252,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </option>
               ))}
             </select>
+
+            <button
+              onClick={() => navigate('/upgrade')}
+              className="btn btn-sm"
+              style={{
+                background: 'var(--warning-soft)',
+                color: 'var(--warning)',
+                border: '1px solid var(--warning)',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                cursor: 'pointer',
+              }}
+            >
+              ⚡ Upgrade Plan
+            </button>
 
             <a
               href="/BusinessSathi.apk"
