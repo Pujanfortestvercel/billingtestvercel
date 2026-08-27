@@ -132,16 +132,8 @@ export async function getPendingSubscriptionRequests() {
       .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
-    if (error || !payments || payments.length === 0) return [];
-
-    // Filter out requests for users who are ALREADY active
-    const { data: activeSubs } = await supabase
-      .from('subscriptions')
-      .select('user_id')
-      .eq('status', 'active');
-
-    const activeUserIds = new Set((activeSubs || []).map(s => s.user_id));
-    return payments.filter(p => !activeUserIds.has(p.user_id));
+    if (error || !payments) return [];
+    return payments;
   } catch {
     return [];
   }
@@ -155,12 +147,23 @@ export async function approveSubscriptionRequest(
   const planObj = PLANS.find(p => p.key === planKey);
   const days = planObj?.days ?? null;
 
-  let trialEndIso: string | null = null;
-  if (days !== null) {
-    trialEndIso = new Date(Date.now() + days * 86400000).toISOString();
+  // 1. Fetch current subscription to stack/extend days if already active
+  const existingSub = await getSubscription(userId);
+
+  let baseMs = Date.now();
+  if (existingSub?.trial_end) {
+    const currentEndMs = new Date(existingSub.trial_end).getTime();
+    if (Number.isFinite(currentEndMs) && currentEndMs > Date.now()) {
+      baseMs = currentEndMs; // Start extension from current future expiration date!
+    }
   }
 
-  // 1. Activate subscription table row
+  let trialEndIso: string | null = null;
+  if (days !== null) {
+    trialEndIso = new Date(baseMs + days * 86400000).toISOString();
+  }
+
+  // 2. Activate or extend subscription table row
   const { error: subErr } = await supabase
     .from('subscriptions')
     .update({
@@ -172,11 +175,11 @@ export async function approveSubscriptionRequest(
     .eq('user_id', userId);
   if (subErr) throw new Error(subErr.message);
 
-  // 2. Clear payment requests for this user so pending status disappears completely
+  // 3. Delete ONLY this specific paymentId request so other pending requests stay for individual approval
   try {
-    await supabase.from('subscription_payments').delete().eq('user_id', userId);
+    await supabase.from('subscription_payments').delete().eq('id', paymentId);
   } catch {
-    // Ignore if table RLS restricts delete
+    await supabase.from('subscription_payments').update({ status: 'approved' }).eq('id', paymentId);
   }
 }
 
