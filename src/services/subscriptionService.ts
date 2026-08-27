@@ -168,9 +168,15 @@ export async function rejectSubscriptionRequest(paymentId: string): Promise<void
 }
 
 export async function clearAllPendingSubscriptionRequests(): Promise<void> {
-  try {
-    await supabase.from('subscription_payments').delete().eq('status', 'pending');
-  } catch {
-    await supabase.from('subscription_payments').update({ status: 'rejected' }).eq('status', 'pending');
+  const { error } = await supabase
+    .from('subscription_payments')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  if (error) {
+    await supabase
+      .from('subscription_payments')
+      .update({ status: 'rejected' })
+      .neq('id', '00000000-0000-0000-0000-000000000000');
   }
 }
