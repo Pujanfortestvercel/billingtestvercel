@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { Button, Card, Spinner } from '../components/UI';
+import { ADMIN_UPI_ID, ADMIN_NAME } from '../config/constants';
 import {
   PLANS,
   submitSubscriptionPayment,
   getUserPendingPayment,
 } from '../services/subscriptionService';
-
-const ADMIN_UPI_ID = 'bharwada.k.pujan@okaxis';
-const ADMIN_NAME = 'Pujan Bharwada';
 
 export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
   const { user, signOut } = useAuth();
