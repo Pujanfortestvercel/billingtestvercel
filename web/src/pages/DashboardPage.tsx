@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Button, Card, Spinner } from '../components/UI';
 import {
   getDashboardStats,
@@ -20,6 +21,7 @@ export function DashboardPage() {
   const { user } = useAuth();
   const { inventoryEnabled } = useSubscription();
   const { store } = useSettings();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,12 +64,12 @@ export function DashboardPage() {
     <div>
       <div className="row spread" style={{ alignItems: 'center', marginBottom: 16 }}>
         <div>
-          <h1 style={{ margin: 0 }}>Dashboard</h1>
+          <h1 style={{ margin: 0 }}>{t('dashboard')}</h1>
           <p className="muted" style={{ margin: 0, marginTop: 2 }}>
             Welcome back, {user?.email}
           </p>
         </div>
-        <Button title="🧾 Create New Bill" variant="primary" onClick={() => navigate('/billing')} />
+        <Button title={`🧾 + ${t('newBill')}`} variant="primary" onClick={() => navigate('/billing')} />
       </div>
 
       {/* Expiry reminders (medical stores) */}
@@ -132,7 +134,7 @@ export function DashboardPage() {
           }}
         >
           <div className="row spread">
-            <strong>📦 Low stock</strong>
+            <strong>📦 {t('lowStock')}</strong>
             <span className="badge badge-danger">{lowStock.length}</span>
           </div>
           <p className="muted" style={{ marginTop: 4 }}>
@@ -175,11 +177,11 @@ export function DashboardPage() {
               marginBottom: 18,
             }}
           >
-            <Kpi label="Revenue (total)" value={formatCurrency(stats.revenueTotal)} accent />
-            <Kpi label="Revenue (this month)" value={formatCurrency(stats.revenueThisMonth)} />
-            <Kpi label="Bills" value={String(stats.bills)} />
-            <Kpi label="Customers" value={String(stats.customers)} />
-            <Kpi label="Items" value={String(stats.items)} />
+            <Kpi label={t('totalRevenue')} value={formatCurrency(stats.revenueTotal)} accent />
+            <Kpi label={t('monthlyRevenue')} value={formatCurrency(stats.revenueThisMonth)} />
+            <Kpi label={t('totalBills')} value={String(stats.bills)} />
+            <Kpi label={t('totalCustomers')} value={String(stats.customers)} />
+            <Kpi label={t('totalItems')} value={String(stats.items)} />
           </div>
 
           <div
