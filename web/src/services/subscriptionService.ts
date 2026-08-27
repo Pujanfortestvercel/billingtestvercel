@@ -162,18 +162,18 @@ export async function approveSubscriptionRequest(
     .eq('user_id', userId);
   if (subErr) throw new Error(subErr.message);
 
-  // 2. Mark payment request approved
-  const { error: payErr } = await supabase
-    .from('subscription_payments')
-    .update({ status: 'approved' })
-    .eq('id', paymentId);
-  if (payErr) throw new Error(payErr.message);
+  // 2. Clear payment requests for this user so pending status disappears completely
+  try {
+    await supabase.from('subscription_payments').delete().eq('user_id', userId);
+  } catch {
+    // Ignore if table RLS restricts delete
+  }
 }
 
 export async function rejectSubscriptionRequest(paymentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('subscription_payments')
-    .update({ status: 'rejected' })
-    .eq('id', paymentId);
-  if (error) throw new Error(error.message);
+  try {
+    await supabase.from('subscription_payments').delete().eq('id', paymentId);
+  } catch {
+    await supabase.from('subscription_payments').update({ status: 'rejected' }).eq('id', paymentId);
+  }
 }
