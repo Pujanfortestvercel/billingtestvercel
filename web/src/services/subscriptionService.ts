@@ -20,11 +20,10 @@ export const PLANS: {
   popular?: boolean;
 }[] = [
   { key: 'trial', label: '21-Day Free Trial', days: 21, status: 'trial', price: 0 },
-  { key: '1m', label: '1 Month Plan', days: 30, status: 'active', price: 299 },
-  { key: '3m', label: '3 Months Plan', days: 90, status: 'active', price: 799 },
-  { key: '6m', label: '6 Months Plan', days: 180, status: 'active', price: 1499 },
-  { key: '1y', label: '1 Year Plan', days: 365, status: 'active', price: 2499, popular: true },
-  { key: 'permanent', label: 'Permanent Plan', days: null, status: 'active', price: 4999 },
+  { key: '1m', label: '1 Month Plan', days: 30, status: 'active', price: 800 },
+  { key: '3m', label: '3 Months Plan', days: 90, status: 'active', price: 2100 },
+  { key: '6m', label: '6 Months Plan', days: 180, status: 'active', price: 3900 },
+  { key: '1y', label: '1 Year Plan', days: 365, status: 'active', price: 6900, popular: true },
 ];
 
 export function planLabel(key: string | null | undefined): string {
