@@ -108,25 +108,33 @@ export async function submitSubscriptionPayment(
 }
 
 export async function getUserPendingPayment(userId: string) {
-  const { data, error } = await supabase
-    .from('subscription_payments')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-    .maybeSingle();
-  if (error) return null;
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('subscription_payments')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 export async function getPendingSubscriptionRequests() {
-  const { data, error } = await supabase
-    .from('subscription_payments')
-    .select('*')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false });
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  try {
+    const { data, error } = await supabase
+      .from('subscription_payments')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function approveSubscriptionRequest(
