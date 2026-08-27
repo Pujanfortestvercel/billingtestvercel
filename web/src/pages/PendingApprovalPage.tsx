@@ -22,7 +22,7 @@ export function PendingApprovalPage({ forceShow }: { forceShow?: boolean }) {
   const [checking, setChecking] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
-  const activePlans = PLANS.filter(p => p.price > 0);
+  const activePlans = PLANS.filter(p => p.price > 0 && !p.adminOnly);
   const currentPlan = activePlans.find(p => p.key === selectedPlanKey) || activePlans[0];
 
   useEffect(() => {
