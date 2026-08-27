@@ -129,7 +129,7 @@ export async function approveSubscriptionRequest(
   const existingSub = await getSubscription(userId);
 
   let baseMs = Date.now();
-  if (existingSub?.trial_end) {
+  if (existingSub && existingSub.status === 'active' && existingSub.plan !== 'trial' && existingSub.trial_end) {
     const currentEndMs = new Date(existingSub.trial_end).getTime();
     if (Number.isFinite(currentEndMs) && currentEndMs > Date.now()) {
       baseMs = currentEndMs;
