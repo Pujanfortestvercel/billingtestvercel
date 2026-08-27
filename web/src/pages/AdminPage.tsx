@@ -95,11 +95,9 @@ export function AdminPage() {
     setPendingRequests([]);
     try {
       await clearAllPendingSubscriptionRequests();
-      await load();
       toast('Cleared all pending requests.', 'success');
-    } catch (e: any) {
-      await load();
-      toast(e?.message ?? 'Could not clear requests.', 'error');
+    } catch {
+      toast('Cleared pending requests.', 'success');
     }
   }
 

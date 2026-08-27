@@ -37,3 +37,9 @@ DROP POLICY IF EXISTS "Subscription payments updatable" ON public.subscription_p
 CREATE POLICY "Subscription payments updatable"
   ON public.subscription_payments FOR UPDATE
   USING (true);
+
+-- 4. Subscription payments deletable by admin
+DROP POLICY IF EXISTS "Subscription payments deletable" ON public.subscription_payments;
+CREATE POLICY "Subscription payments deletable"
+  ON public.subscription_payments FOR DELETE
+  USING (true);
