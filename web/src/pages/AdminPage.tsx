@@ -24,6 +24,7 @@ import {
   getPendingSubscriptionRequests,
   approveSubscriptionRequest,
   rejectSubscriptionRequest,
+  clearAllPendingSubscriptionRequests,
 } from '../services/subscriptionService';
 import { formatDate } from '../utils/format';
 import { APP_NAME } from '../config/constants';
@@ -84,6 +85,24 @@ export function AdminPage() {
     }
   }
 
+  async function handleClearAllPending() {
+    const ok = await confirm(
+      'Clear All Pending Requests?',
+      'This will clear all pending test subscription requests from the list.',
+      { danger: true },
+    );
+    if (!ok) return;
+    setPendingRequests([]);
+    try {
+      await clearAllPendingSubscriptionRequests();
+      await load();
+      toast('Cleared all pending requests.', 'success');
+    } catch (e: any) {
+      await load();
+      toast(e?.message ?? 'Could not clear requests.', 'error');
+    }
+  }
+
   async function removeAccount(row: AdminUserRow) {
     const ok = await confirm(
       'Delete account permanently?',
@@ -116,9 +135,17 @@ export function AdminPage() {
       {/* Pending Subscription Payment Requests */}
       {pendingRequests.length > 0 ? (
         <Card style={{ marginBottom: 24, borderColor: 'var(--primary)', background: 'var(--primary-soft)' }}>
-          <h3 style={{ marginTop: 0, color: 'var(--primary)', marginBottom: 8 }}>
-            🔔 Pending Subscription Requests ({pendingRequests.length})
-          </h3>
+          <div className="row spread" style={{ alignItems: 'center', marginBottom: 6 }}>
+            <h3 style={{ margin: 0, color: 'var(--primary)' }}>
+              🔔 Pending Subscription Requests ({pendingRequests.length})
+            </h3>
+            <Button
+              title="🗑 Clear All Pending"
+              variant="danger"
+              small
+              onClick={handleClearAllPending}
+            />
+          </div>
           <p className="muted" style={{ marginTop: 0, marginBottom: 12, fontSize: 13 }}>
             Shopkeepers who tapped "I Have Paid" for a plan upgrade. Check your UPI app and click Approve.
           </p>
